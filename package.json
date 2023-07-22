@@ -1,0 +1,51 @@
+{
+  "name": "voltvector-be",
+  "version": "1.0.0",
+  "description": "VoltVector Backend",
+  "main": "server.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/server.ts",
+    "start": "prisma generate && node src/server.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pb-coding/voltvector-be.git"
+  },
+  "author": "pb-coding",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pb-coding/voltvector-be/issues"
+  },
+  "homepage": "https://github.com/pb-coding/voltvector-be#readme",
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "bcrypt": "^5.1.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "date-fns": "^2.30.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.1",
+    "ts-node": "^10.9.1",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/cookie-parser": "^1.4.3",
+    "@types/cors": "^2.8.13",
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/node": "^20.4.2",
+    "@types/uuid": "^9.0.2",
+    "esbuild-register": "^3.4.2",
+    "nodemon": "^3.0.1",
+    "prisma": "^5.0.0",
+    "typescript": "^5.1.6"
+  }
+}
