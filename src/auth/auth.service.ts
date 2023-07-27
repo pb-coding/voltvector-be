@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { UserType } from "../user/user.types";
-import { RefreshTokenType } from "./auth.types";
+import { RefreshTokenType, RoleType } from "./auth.types";
 
 const saveRefreshToken = async (
   userId: number,
@@ -42,10 +42,30 @@ const deleteRefreshToken = async (refreshToken: string) => {
   return deletedRefreshToken;
 };
 
+const queryRolesByUserId = async (id: number): Promise<RoleType[]> => {
+  const userRolesObject = await prisma.user.findUnique({
+    where: {
+      id: id,
+    },
+    select: {
+      roles: true,
+    },
+  });
+
+  const userRoles: RoleType[] = [];
+  userRolesObject?.roles.forEach((roleObject) =>
+    userRoles.push(roleObject.role)
+  );
+
+  console.log(userRoles);
+  return userRoles;
+};
+
 export const authService = {
   saveRefreshToken,
   queryUserByRefreshToken,
   deleteRefreshToken,
+  queryRolesByUserId,
 };
 
 export default authService;

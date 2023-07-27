@@ -16,10 +16,20 @@ model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique
   name          String?
+  roles         UserRole[]
   password      String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   refreshTokens RefreshToken[]
+}
+
+model UserRole {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  role          Role
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
 }
 
 model RefreshToken {
@@ -29,4 +39,9 @@ model RefreshToken {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   user          User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  USER
 }

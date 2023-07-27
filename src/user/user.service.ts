@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
 import { CreateUserRequest, UpdateUserRequest } from "./user.types";
+import { Role } from "@prisma/client";
 
 const queryAllUsers = async () => {
   const users = await prisma.user.findMany();
@@ -34,6 +35,14 @@ const createUser = async (user: CreateUserRequest) => {
     data: {
       ...user,
       password: hashedPassword,
+      roles: {
+        create: {
+          role: Role.USER,
+        },
+      },
+    },
+    include: {
+      roles: true,
     },
   });
   console.log(`Created User in Database: ${newUser}`);

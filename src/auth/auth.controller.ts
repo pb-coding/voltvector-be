@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+
 import { asyncHandler } from "../middleware/errorHandler";
 import authService from "./auth.service";
 import userService from "../user/user.service";
 import { oneDayinMillis } from "../utils/constants";
+import { AuthPayloadType } from "./auth.types";
 
 const handleLogin = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -32,21 +34,27 @@ const handleLogin = asyncHandler(async (req: Request, res: Response) => {
       .json({ error: "Invalid credentials - Auth Error Code 2" }); // Code 2 = Password does not match
   }
 
+  const userRoles = await authService.queryRolesByUserId(user.id);
+
   const accessToken = jwt.sign(
-    { email: user.email },
+    {
+      user: {
+        id: user.id,
+        roles: userRoles,
+      },
+    } satisfies AuthPayloadType,
     process.env.ACCESS_TOKEN_SECRET as string,
     { expiresIn: "1m" }
   );
 
   const refreshToken = jwt.sign(
-    { email: user.email },
+    { id: user.id },
     process.env.REFRESH_TOKEN_SECRET as string,
     { expiresIn: "1d" }
   );
 
   await authService.saveRefreshToken(user.id, refreshToken);
 
-  // TODO: set secure true when using https in production
   res.cookie("jwt", refreshToken, {
     httpOnly: true,
     sameSite: "none",
@@ -64,14 +72,21 @@ const handleRefreshToken = asyncHandler(async (req: Request, res: Response) => {
   const user = await authService.queryUserByRefreshToken(refreshToken);
   if (!user) return res.sendStatus(403);
 
+  const userRoles = await authService.queryRolesByUserId(user.id);
+
   jwt.verify(
     refreshToken,
     process.env.REFRESH_TOKEN_SECRET as string,
     // TODO: identify according types for err and decoded
     (err: any, decoded: any) => {
-      if (err || user.email !== decoded.email) return res.sendStatus(403);
+      if (err || user.id !== decoded.id) return res.sendStatus(403);
       const accessToken = jwt.sign(
-        { email: user.email }, // TODO: Again, this should be a user id or username
+        {
+          user: {
+            id: user.id,
+            roles: userRoles,
+          },
+        },
         process.env.ACCESS_TOKEN_SECRET as string,
         { expiresIn: "1m" }
       );

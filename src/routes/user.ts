@@ -1,11 +1,12 @@
 import express, { Router, Request, Response } from "express";
 import * as path from "path";
 import userController from "../user/user.controller";
-import verifyJWT from "../middleware/verifyJWT";
+import authorize from "../middleware/authorize";
+import { Role } from "@prisma/client";
 
 const userRouter = Router();
 
-userRouter.get("/", verifyJWT, userController.getAllUsers);
+userRouter.get("/", authorize([Role.ADMIN]), userController.getAllUsers);
 userRouter.get("/:id", userController.getUserById);
 userRouter.post("/", userController.createUser);
 userRouter.put("/:id", userController.updateUser);
