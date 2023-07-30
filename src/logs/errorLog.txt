@@ -135,3 +135,191 @@ D:\dev\voltvector\voltvector-be\src\user\user.service.ts:33:37
   32 
 → 33   const newUser = await prisma.user.create(
 Unique constraint failed on the fields: (`email`)
+2023-07-28 12:39:28	d988a495-e8a2-45c7-a565-abba0758c80d	AxiosError: Request failed with status code 400
+2023-07-28 12:40:27	8b4f2e14-6a7d-4e81-8adf-3b17dbd485f1	AxiosError: Request failed with status code 401
+2023-07-28 12:51:24	4cd78a7d-450c-46c6-92a9-c0136b907032	AxiosError: Request failed with status code 401
+2023-07-28 12:58:16	aa525096-cce9-4972-b749-bf271c7c8c27	AxiosError: Request failed with status code 401
+2023-07-28 13:00:16	d24e67ce-6e09-4e6b-ad8f-b0c417c06acf	AxiosError: Request failed with status code 401
+2023-07-28 13:07:06	073a1b7c-34cd-4745-b9f3-ed43594aad50	AxiosError: Request failed with status code 401
+2023-07-28 13:12:07	7436334e-a41a-482b-a760-b9da36b3fd46	AxiosError: Request failed with status code 401
+2023-07-28 13:20:41	88321153-4a0d-4bf9-bcb0-9e2efcb0cac9	AxiosError: Request failed with status code 401
+2023-07-28 13:23:56	717164ab-9ecb-49e5-94c2-f7f0b5905b3d	AxiosError: Request failed with status code 401
+2023-07-28 13:28:52	65929679-5ec9-4ff8-8780-925f42bfeb44	AxiosError: Request failed with status code 401
+2023-07-28 13:31:00	6798e890-669c-4a08-8ed0-e2ec489d36bc	AxiosError: Request failed with status code 401
+2023-07-29 11:39:09	36555bd1-583d-482d-9dff-b6e2ab00c530	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\enphase.service.ts:101:55
+
+   98 };
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+→ 101   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-07-29 11:41:44	1636cf37-8f3b-4489-9916-237d4810a021	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\enphase.service.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-07-29 13:55:25	5aaf1aa7-ae3e-4c59-8d50-779d79aa3e4f	Error: Cannot set headers after they are sent to the client
+2023-07-29 13:57:17	fac7ed14-e788-4503-abe7-e49241c18542	Error: Cannot set headers after they are sent to the client
+2023-07-29 13:57:26	ef6a30bf-cd90-42da-aa6c-da6515f16f06	Error: Cannot set headers after they are sent to the client
+2023-07-29 13:59:22	e39fe9a9-2624-439e-95c0-2a32d8d09008	Error: Cannot set headers after they are sent to the client
+2023-07-29 13:59:55	d4e2087c-bc87-4507-8217-21f31d5d2155	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:04:27	e743bce5-92b4-4f25-b815-79995f7406c3	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:17:24	1cbe802b-a0c9-482d-8450-e0b660273a7d	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:20:15	a0f5f1dc-8169-44a8-a9e4-437e3f74c70d	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:20:16	0f0e7187-0590-4a16-8132-842d23a16ed3	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:20:18	a48e7005-effc-4fde-a8ce-e004dca59c17	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:23:34	d4a318b2-9c31-4882-8440-e41d2b627a16	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:24:12	ac4b5553-e4d7-4282-99d3-e97c142fa70c	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:24:19	032d4852-c1d9-4a47-ad4b-d2e9cf24292e	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:25:02	04470be2-0e6b-456f-bdf1-01688ec442a3	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:25:02	10b6d420-d93c-4671-bd9b-e98dff658674	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:25:04	126093da-0b4c-4b03-b4df-b29df1b972a4	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:25:09	1881335b-de8e-444b-a2e8-5630ad0dc347	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:25:25	0588fbf0-005f-4a09-8090-c12886ee10e7	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:25:27	a3d1e6cc-b8c9-4f45-b95a-481474fc8a5b	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:25:45	b1cce187-dc20-4aae-91df-0eee377640ae	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:25:47	801c5a74-3585-4c56-a482-4433b389538b	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:26:32	179dacc7-be0e-498f-9aad-f2927aee71f9	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:26:34	22dc63a6-5f10-4069-a388-5e5053352c85	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:26:35	699d6ac9-ff15-4c2e-8947-ff68c76498dd	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:27:25	ae89c5be-5073-4b94-987f-f7a86d6770a9	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:32:01	89f82480-b9cd-4cf4-b441-d876ff4bb44c	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:33:32	70002bb9-706b-40ef-a849-44116faf6a9c	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:34:28	3c69c902-5088-4ed2-aa58-07302a8ac48c	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:34:29	9c7ab761-3193-40a3-9852-55bd92ea943c	Error: Cannot set headers after they are sent to the client
+2023-07-29 14:34:54	7896b6b5-7505-4a78-9850-df5006ccb42f	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:01:43	0f603061-48a2-4aad-8a79-f267d1d06288	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:01:43	55ccb4c9-12ec-49df-9074-520f937cbdce	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:14:36	f22935a0-3731-4d7e-9c6f-b7c3b2c667e3	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:14:44	9ba50e41-408f-4d19-ac7c-1ad7c17d8e83	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:20:32	365dabad-deb0-40df-85a1-54bb5a402621	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:20:36	085278d9-71e9-4ed8-a545-ac9a40ec133c	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:21:03	d7ea7827-09b8-41c6-b486-0898cf3fb1b7	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:21:38	e54b7a86-566c-42cb-9d4d-e470e2c38bd3	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:21:43	d8ffd27d-bccd-40c7-ab1c-930dda11b240	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:25:14	e2bfabb8-7a0e-4234-b2d1-6f16c60fed9a	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:25:19	14423875-b092-4cb5-b22b-342b4590cb63	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:56:04	8e3b821b-8abb-4c5c-af9b-dacb751960ba	Error: Cannot set headers after they are sent to the client
+2023-07-29 15:56:13	cf6c34e9-9617-4a42-857c-f2f7a48cbfb2	Error: Cannot set headers after they are sent to the client
+2023-07-29 16:02:01	3b0c4b65-8d95-405b-8aff-9f40124f0c37	Error: Cannot set headers after they are sent to the client
+2023-07-29 16:03:14	2980e036-cb65-4b6e-b1dd-ec2b48a7e3f2	Error: Cannot set headers after they are sent to the client
+2023-07-29 16:03:17	aebf0060-774d-418f-855c-66467c374498	Error: Cannot set headers after they are sent to the client
+2023-07-29 16:10:41	0f350ee7-8a17-412a-b5c9-4f71c6d556ee	Error: Cannot set headers after they are sent to the client
+2023-07-29 16:13:57	40bfa170-9a1e-4017-8ab3-3cc793017f02	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\enphase.service.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-07-29 17:09:15	ba2bbf39-f851-468b-91f7-bd12319dd7c7	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\enphase.service.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-07-29 17:09:20	434b71e2-cb8d-4a7f-a30f-360d875e884b	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\enphase.service.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.

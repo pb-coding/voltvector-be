@@ -9,6 +9,7 @@ import corsOptions from "./config/corsOptions";
 import cookieParser from "cookie-parser";
 import rootRouter from "./routes/root";
 import authRouter from "./routes/auth";
+import enphaseRouter from "./routes/enphase";
 import userRouter from "./routes/user";
 
 const PORT = process.env.PORT || 3001;
@@ -29,6 +30,7 @@ app.use(cookieParser());
 
 app.use("/", rootRouter);
 app.use("/auth", authRouter);
+app.use("/enphase", enphaseRouter);
 app.use("/user", userRouter);
 
 app.all("*", (req: Request, res: Response) => {

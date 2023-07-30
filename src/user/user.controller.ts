@@ -3,18 +3,20 @@ import userService from "./user.service";
 import { CreateUserRequest, UpdateUserRequest, UserType } from "./user.types";
 import { asyncHandler } from "../middleware/errorHandler";
 
-export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
-  const allUsers = await userService.queryAllUsers();
-  res.json(allUsers);
-});
+export const handleAllUsersRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const allUsers = await userService.queryAllUsers();
+    res.json(allUsers);
+  }
+);
 
-export const getUserById = async (req: Request, res: Response) => {
+export const handleUserByIdRequest = async (req: Request, res: Response) => {
   const { id } = req.params;
   const user = await userService.queryUserById(Number(id));
   res.json(user);
 };
 
-export const createUser = asyncHandler(
+export const handleCreateUserRequest = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, name, password } = req.body as Partial<CreateUserRequest>;
 
@@ -35,29 +37,33 @@ export const createUser = asyncHandler(
   }
 );
 
-export const updateUser = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { email, name } = req.body as UpdateUserRequest;
-  const user: UpdateUserRequest = {
-    email,
-    name,
-  };
-  const updatedUser = await userService.updateUser(Number(id), user);
-  res.json(updatedUser);
-});
+export const handleUpdateUserRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { email, name } = req.body as UpdateUserRequest;
+    const user: UpdateUserRequest = {
+      email,
+      name,
+    };
+    const updatedUser = await userService.updateUser(Number(id), user);
+    res.json(updatedUser);
+  }
+);
 
-export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const deletedUser = await userService.deleteUser(Number(id));
-  res.json(deletedUser);
-});
+export const handleDeleteUserRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const deletedUser = await userService.deleteUser(Number(id));
+    res.json(deletedUser);
+  }
+);
 
 export const userController = {
-  getAllUsers,
-  getUserById,
-  createUser,
-  updateUser,
-  deleteUser,
+  handleAllUsersRequest,
+  handleUserByIdRequest,
+  handleCreateUserRequest,
+  handleUpdateUserRequest,
+  handleDeleteUserRequest,
 };
 
 export default userController;

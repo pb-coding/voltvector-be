@@ -26,7 +26,9 @@ const authorize = (requiredRoles: RoleType[]) => {
         const payload = decoded as AuthPayloadType;
         if (err) return res.sendStatus(401);
         const userRoles = payload.user.roles;
-        if (!verifyRoles(requiredRoles, userRoles)) return res.sendStatus(403);
+        const isAuthorized = verifyRoles(requiredRoles, userRoles);
+        console.log(`user is authorized: ${isAuthorized}`);
+        if (!isAuthorized) return res.sendStatus(403);
         next();
       }
     );

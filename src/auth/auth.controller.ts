@@ -8,7 +8,7 @@ import userService from "../user/user.service";
 import { oneDayinMillis } from "../utils/constants";
 import { AuthPayloadType } from "./auth.types";
 
-const handleLogin = asyncHandler(async (req: Request, res: Response) => {
+const handleLoginRequest = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -64,56 +64,64 @@ const handleLogin = asyncHandler(async (req: Request, res: Response) => {
   res.json({ accessToken });
 });
 
-const handleRefreshToken = asyncHandler(async (req: Request, res: Response) => {
-  const cookies = req.cookies;
-  if (!cookies?.jwt) return res.sendStatus(401);
-  const refreshToken = cookies.jwt;
+const handleRefreshTokenRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const cookies = req.cookies;
+    if (!cookies?.jwt) return res.sendStatus(401);
+    const refreshToken = cookies.jwt;
 
-  const user = await authService.queryUserByRefreshToken(refreshToken);
-  if (!user) return res.sendStatus(403);
+    const user = await authService.queryUserByRefreshToken(refreshToken);
+    if (!user) return res.sendStatus(403);
 
-  const userRoles = await authService.queryRolesByUserId(user.id);
+    const userRoles = await authService.queryRolesByUserId(user.id);
 
-  jwt.verify(
-    refreshToken,
-    process.env.REFRESH_TOKEN_SECRET as string,
-    // TODO: identify according types for err and decoded
-    (err: any, decoded: any) => {
-      if (err || user.id !== decoded.id) return res.sendStatus(403);
-      const accessToken = jwt.sign(
-        {
-          user: {
-            id: user.id,
-            roles: userRoles,
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET as string,
+      // TODO: identify according types for err and decoded
+      (err: any, decoded: any) => {
+        if (err || user.id !== decoded.id) return res.sendStatus(403);
+        const accessToken = jwt.sign(
+          {
+            user: {
+              id: user.id,
+              roles: userRoles,
+            },
           },
-        },
-        process.env.ACCESS_TOKEN_SECRET as string,
-        { expiresIn: "1m" }
-      );
-      res.json({ accessToken });
-    }
-  );
-});
-
-const handleLogout = asyncHandler(async (req: Request, res: Response) => {
-  const cookies = req.cookies;
-  if (!cookies?.jwt) return res.sendStatus(204);
-  const refreshToken = cookies.jwt; // TODO: check type of jwt
-
-  const user = await authService.queryUserByRefreshToken(refreshToken);
-  if (!user) {
-    res.clearCookie("jwt", { httpOnly: true, sameSite: "none", secure: true });
-    return res.sendStatus(204);
+          process.env.ACCESS_TOKEN_SECRET as string,
+          { expiresIn: "1m" }
+        );
+        res.json({ accessToken });
+      }
+    );
   }
-  await authService.deleteRefreshToken(refreshToken);
-  res.clearCookie("jwt", { httpOnly: true, sameSite: "none", secure: true });
-  res.sendStatus(204);
-});
+);
+
+const handleLogoutRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const cookies = req.cookies;
+    if (!cookies?.jwt) return res.sendStatus(204);
+    const refreshToken = cookies.jwt; // TODO: check type of jwt
+
+    const user = await authService.queryUserByRefreshToken(refreshToken);
+    if (!user) {
+      res.clearCookie("jwt", {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+      });
+      return res.sendStatus(204);
+    }
+    await authService.deleteRefreshToken(refreshToken);
+    res.clearCookie("jwt", { httpOnly: true, sameSite: "none", secure: true });
+    res.sendStatus(204);
+  }
+);
 
 export const authController = {
-  handleLogin,
-  handleRefreshToken,
-  handleLogout,
+  handleLoginRequest,
+  handleRefreshTokenRequest,
+  handleLogoutRequest,
 };
 
 export default authController;

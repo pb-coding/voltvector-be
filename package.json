@@ -23,6 +23,7 @@
   "homepage": "https://github.com/pb-coding/voltvector-be#readme",
   "dependencies": {
     "@prisma/client": "^5.0.0",
+    "axios": "^1.4.0",
     "bcrypt": "^5.1.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

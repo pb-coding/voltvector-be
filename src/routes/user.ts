@@ -6,11 +6,33 @@ import { Role } from "@prisma/client";
 
 const userRouter = Router();
 
-userRouter.get("/", authorize([Role.ADMIN]), userController.getAllUsers);
-userRouter.get("/:id", userController.getUserById);
-userRouter.post("/", userController.createUser);
-userRouter.put("/:id", userController.updateUser);
-userRouter.delete("/:id", userController.deleteUser);
+// TODO: implement authorization that users can only access and edit their own data
+
+userRouter.get(
+  "/",
+  authorize([Role.ADMIN]),
+  userController.handleAllUsersRequest
+);
+userRouter.get(
+  "/:id",
+  authorize([Role.USER]),
+  userController.handleUserByIdRequest
+);
+userRouter.post(
+  "/",
+  authorize([Role.ADMIN]),
+  userController.handleCreateUserRequest
+);
+userRouter.put(
+  "/:id",
+  authorize([Role.USER]),
+  userController.handleUpdateUserRequest
+);
+userRouter.delete(
+  "/:id",
+  authorize([Role.ADMIN]),
+  userController.handleDeleteUserRequest
+);
 
 userRouter.get("/test", (req: Request, res: Response) => {
   res.send("test");
