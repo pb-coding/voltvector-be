@@ -3,10 +3,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 import { asyncHandler } from "../middleware/errorHandler";
-import authService from "./auth.service";
-import userService from "../user/user.service";
+import authService from "./authService";
+import userService from "../user/userService";
 import { oneDayinMillis } from "../utils/constants";
-import { AuthPayloadType } from "./auth.types";
+import { AuthPayloadType } from "./authTypes";
 
 const handleLoginRequest = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -55,13 +55,21 @@ const handleLoginRequest = asyncHandler(async (req: Request, res: Response) => {
 
   await authService.saveRefreshToken(user.id, refreshToken);
 
+  const userAuthData = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    roles: userRoles,
+    accessToken: accessToken,
+  };
+
   res.cookie("jwt", refreshToken, {
     httpOnly: true,
     sameSite: "none",
     secure: true,
     maxAge: oneDayinMillis,
   });
-  res.json({ accessToken });
+  res.json({ userAuthData });
 });
 
 const handleRefreshTokenRequest = asyncHandler(
@@ -91,7 +99,15 @@ const handleRefreshTokenRequest = asyncHandler(
           process.env.ACCESS_TOKEN_SECRET as string,
           { expiresIn: "1m" }
         );
-        res.json({ accessToken });
+
+        const userAuthData = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          roles: userRoles,
+          accessToken: accessToken,
+        };
+        res.json({ userAuthData });
       }
     );
   }

@@ -1,6 +1,6 @@
 import express, { Router, Request, Response } from "express";
 import * as path from "path";
-import authController from "../auth/auth.controller";
+import authController from "../auth/authController";
 
 const authRouter = Router();
 

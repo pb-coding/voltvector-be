@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import { Buffer } from "buffer";
-
-import enphaseApps from "./enphase.applications";
+import enphaseAppsClient from "./enphaseAuthClient";
+import enphaseApps from "./enphaseApps";
 
 interface EnphaseAuthTokens {
   access_token: string;
@@ -37,7 +37,7 @@ const requestEnphaseTokensByAuthCode = async (
 ): Promise<EnphaseAuthTokens> => {
   const grantType = "authorization_code";
   const redirectUri = `http://localhost:3001/enphase/oauth?userid=${userId}&appname=${applicationName}`;
-  const app = findEnphaseApp(applicationName);
+  const app = enphaseAppsClient.findEnphaseApp(applicationName);
   const authorization = createAuthorizationHeader(
     app.clientId,
     app.clientSecret
@@ -68,7 +68,7 @@ const requestRefreshedTokensByRefreshToken = async (
 ): Promise<EnphaseAuthTokens> => {
   const grantType = "refresh_token";
 
-  const app = findEnphaseApp(applicationName);
+  const app = enphaseAppsClient.findEnphaseApp(applicationName);
   const authorization = createAuthorizationHeader(
     app.clientId,
     app.clientSecret
@@ -91,9 +91,10 @@ const requestRefreshedTokensByRefreshToken = async (
   return response.data as EnphaseAuthTokens;
 };
 
-export const enphaseClient = {
+export const enphaseAuthClient = {
+  findEnphaseApp,
   requestEnphaseTokensByAuthCode,
   requestRefreshedTokensByRefreshToken,
 };
 
-export default enphaseClient;
+export default enphaseAuthClient;

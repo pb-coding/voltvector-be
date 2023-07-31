@@ -1,10 +1,20 @@
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
-import { CreateUserRequest, UpdateUserRequest } from "./user.types";
+import { CreateUserRequest, UpdateUserRequest } from "./userTypes";
 import { Role } from "@prisma/client";
 
 const queryAllUsers = async () => {
-  const users = await prisma.user.findMany();
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+      updatedAt: true,
+      roles: true,
+      password: false,
+    },
+  });
   return users;
 };
 
@@ -13,11 +23,25 @@ const queryUserById = async (id: number) => {
     where: {
       id: id,
     },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+      updatedAt: true,
+      roles: true,
+      password: false,
+    },
   });
   console.log(user);
   return user;
 };
 
+/**
+ * Function to query a user by email address. CAUTION: This function returns the password hash!
+ * @param email
+ * @returns user
+ */
 const queryUserByEmail = async (email: string) => {
   const user = await prisma.user.findUnique({
     where: {
@@ -50,14 +74,28 @@ const createUser = async (user: CreateUserRequest) => {
 };
 
 const updateUser = async (id: number, user: UpdateUserRequest) => {
+  let dataToUpdate = user;
+
+  if (user.password) {
+    const hashedPassword = await bcrypt.hash(user.password, 10);
+    dataToUpdate = {
+      ...user,
+      password: hashedPassword,
+    };
+  }
   const updatedUser = await prisma.user.update({
     where: {
       id: id,
     },
-    data: {
-      email: user.email,
-      name: user.name,
-      password: user.password,
+    data: dataToUpdate,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+      updatedAt: true,
+      roles: true,
+      password: false,
     },
   });
   console.log(`Updated User in Database: ${updatedUser}`);
@@ -68,6 +106,15 @@ const deleteUser = async (id: number) => {
   const deletedUser = await prisma.user.delete({
     where: {
       id: id,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+      updatedAt: true,
+      roles: true,
+      password: false,
     },
   });
   console.log(`Deleted User in Database: ${deletedUser}`);

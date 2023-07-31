@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma";
-import { UserType } from "../user/user.types";
-import { RefreshTokenType, RoleType } from "./auth.types";
+import { UserType } from "../user/userTypes";
+import { RefreshTokenType, RoleType } from "./authTypes";
 
 const saveRefreshToken = async (
   userId: number,

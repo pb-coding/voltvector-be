@@ -1,6 +1,6 @@
 import express, { Router, Request, Response } from "express";
 import * as path from "path";
-import userController from "../user/user.controller";
+import userController from "../user/userController";
 import authorize from "../middleware/authorize";
 import { Role } from "@prisma/client";
 

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import userService from "./user.service";
-import { CreateUserRequest, UpdateUserRequest, UserType } from "./user.types";
+import userService from "./userService";
+import { CreateUserRequest, UpdateUserRequest, UserType } from "./userTypes";
 import { asyncHandler } from "../middleware/errorHandler";
 
 export const handleAllUsersRequest = asyncHandler(

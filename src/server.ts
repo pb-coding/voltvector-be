@@ -12,6 +12,9 @@ import authRouter from "./routes/auth";
 import enphaseRouter from "./routes/enphase";
 import userRouter from "./routes/user";
 
+// Initialize cron jobs
+import "./enphase/energy/enphaseEnergyJobs";
+
 const PORT = process.env.PORT || 3001;
 
 app.use(logger);

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-import { AuthPayloadType, RoleType } from "../auth/auth.types";
+import { AuthPayloadType, RoleType } from "../auth/authTypes";
 
 interface AuthenticatedRequest extends Request {
   id?: number;

@@ -1,6 +1,6 @@
-import { prisma } from "../lib/prisma";
-import enphaseClient from "./enphase.client";
-import enphaseApps from "./enphase.applications";
+import { prisma } from "../../lib/prisma";
+import enphaseClient from "./enphaseAuthClient";
+import enphaseApps from "./enphaseApps";
 
 const retrieveAndSaveEnphaseAuthTokens = async (
   userId: number,
@@ -111,9 +111,9 @@ const querySavedEnphaseAppsByUserId = async (userId: number) => {
   return userEnphaseApps;
 };
 
-const enphaseService = {
+const enphaseAuthService = {
   retrieveAndSaveEnphaseAuthTokens,
   saveEnphaseAuthTokens,
   getEnphaseAppsByUserId,
 };
-export default enphaseService;
+export default enphaseAuthService;
