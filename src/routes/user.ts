@@ -29,13 +29,9 @@ userRouter.put(
   userController.handleUpdateUserRequest
 );
 userRouter.delete(
-  "/:id",
+  "/",
   authorize([Role.ADMIN]),
   userController.handleDeleteUserRequest
 );
-
-userRouter.get("/test", (req: Request, res: Response) => {
-  res.send("test");
-});
 
 export default userRouter;

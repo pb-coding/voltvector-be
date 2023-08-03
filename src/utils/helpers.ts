@@ -20,6 +20,7 @@ export const validateRequestParams = (
   res: Response
 ) => {
   requestParameter.forEach((paramObject) => {
+    let success = false;
     if (paramObject.expectedType === "numeric") {
       if (!paramObject.param || paramObject.param == "")
         return res
@@ -40,6 +41,23 @@ export const validateRequestParams = (
         return res
           .status(400)
           .json({ error: `Invalid ${paramObject.name} provided.` });
-    }
+    } else if (paramObject.expectedType === "numeric[]") {
+      if (!paramObject.param || paramObject.param == "")
+        return res
+          .status(400)
+          .json({ error: `No ${paramObject.name} provided.` });
+
+      if (!Array.isArray(paramObject.param))
+        return res
+          .status(400)
+          .json({ error: `Invalid ${paramObject.name} provided.` });
+
+      if (paramObject.param.some((value) => isNaN(Number(value))))
+        return res
+          .status(400)
+          .json({ error: `Invalid ${paramObject.name} provided.` });
+    } else success = true;
+
+    return success;
   });
 };

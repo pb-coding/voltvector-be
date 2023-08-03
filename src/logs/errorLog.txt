@@ -323,3 +323,42 @@ D:\dev\voltvector\voltvector-be\src\enphase\enphase.service.ts:102:55
         })
 
 Argument `userId` is missing.
+2023-08-01 14:27:10	4a4ad64b-3c61-48fa-8820-dc14b8648f16	PrismaClientKnownRequestError: 
+Invalid `prisma.user.delete()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:106:47
+
+  103 };
+  104 
+  105 const deleteUser = async (id: number) => {
+→ 106   const deletedUser = await prisma.user.delete(
+Foreign key constraint failed on the field: `UserRole_userId_fkey (index)`
+2023-08-01 14:46:58	afc15ec6-470a-4dff-8ca3-bae1f540257f	PrismaClientKnownRequestError: 
+Invalid `prisma.user.delete()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:106:47
+
+  103 };
+  104 
+  105 const deleteUser = async (id: number) => {
+→ 106   const deletedUser = await prisma.user.delete(
+Foreign key constraint failed on the field: `UserRole_userId_fkey (index)`
+2023-08-01 14:48:42	a5a9bd27-9f7d-473c-a20a-6f5b7f475186	PrismaClientKnownRequestError: 
+Invalid `prisma.user.delete()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:106:47
+
+  103 };
+  104 
+  105 const deleteUser = async (id: number) => {
+→ 106   const deletedUser = await prisma.user.delete(
+Foreign key constraint failed on the field: `UserRole_userId_fkey (index)`
+2023-08-01 17:27:45	53341900-6a54-42df-b1d4-26fe205170c2	TypeError: userIds.forEach is not a function
+2023-08-01 17:28:26	4f468343-6f80-4f92-89df-1b5f03eadbb9	TypeError: userIds.forEach is not a function
+2023-08-01 17:29:25	e0d2a859-e623-425b-a7cd-693b486eae93	TypeError: Cannot read properties of undefined (reading 'forEach')
+2023-08-01 17:53:57	a9e2058f-2ef3-4952-9ad1-96736ac8ee8f	Error: Cannot set headers after they are sent to the client
+2023-08-01 17:57:20	d8f1f371-168f-4307-94d1-494a83c291e6	Error: Cannot set headers after they are sent to the client
+2023-08-01 17:59:16	c3c2ed8c-26df-416c-9250-0e9a37df352a	Error: Cannot set headers after they are sent to the client
+2023-08-01 18:00:23	ed8f34e0-29f1-4dec-a0c9-907dab400c52	TypeError: Cannot read properties of undefined (reading 'forEach')
+2023-08-01 18:01:49	ccebcac0-c0fa-4d1c-87f4-fe94300c9ac8	TypeError: Cannot read properties of undefined (reading 'forEach')
+2023-08-01 18:06:27	79f5db33-1d51-47e2-abbb-ccd0827f6edb	TypeError: Cannot read properties of undefined (reading 'forEach')
+2023-08-01 18:07:30	7ad547c6-dfd6-4a59-828d-b73d10caa345	TypeError: Cannot read properties of undefined (reading 'forEach')
+2023-08-01 18:14:07	1159787c-2da4-46e8-90ca-c10598a83a82	TypeError: Cannot read properties of undefined (reading 'forEach')
+2023-08-01 18:14:56	f88b99bf-eeaf-4331-9f53-e392dddbda7f	TypeError: Cannot read properties of undefined (reading 'forEach')

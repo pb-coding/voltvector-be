@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-import { AuthPayloadType, RoleType } from "../auth/authTypes";
+import {
+  AuthPayloadType,
+  AuthenticatedRequest,
+  RoleType,
+} from "../auth/authTypes";
 
-interface AuthenticatedRequest extends Request {
-  id?: number;
-  role?: string;
-}
 const authorize = (requiredRoles: RoleType[]) => {
   return function verifyJWT(
     req: AuthenticatedRequest,
@@ -27,6 +27,11 @@ const authorize = (requiredRoles: RoleType[]) => {
         if (err) return res.sendStatus(401);
         const userRoles = payload.user.roles;
         const isAuthorized = verifyRoles(requiredRoles, userRoles);
+
+        // adds the user id to the request object so that we can use it in the controller
+        req.id = payload.user.id;
+        req.roles = payload.user.roles;
+
         console.log(`user is authorized: ${isAuthorized}`);
         if (!isAuthorized) return res.sendStatus(403);
         next();

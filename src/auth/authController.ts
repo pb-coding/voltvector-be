@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { asyncHandler } from "../middleware/errorHandler";
 import authService from "./authService";
 import userService from "../user/userService";
-import { oneDayinMillis } from "../utils/constants";
+import { oneHourInMillis } from "../utils/constants";
 import { AuthPayloadType } from "./authTypes";
 
 const handleLoginRequest = asyncHandler(async (req: Request, res: Response) => {
@@ -44,32 +44,24 @@ const handleLoginRequest = asyncHandler(async (req: Request, res: Response) => {
       },
     } satisfies AuthPayloadType,
     process.env.ACCESS_TOKEN_SECRET as string,
-    { expiresIn: "1m" }
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION_TIME as string }
   );
 
   const refreshToken = jwt.sign(
     { id: user.id },
     process.env.REFRESH_TOKEN_SECRET as string,
-    { expiresIn: "1d" }
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION_TIME as string }
   );
 
   await authService.saveRefreshToken(user.id, refreshToken);
-
-  const userAuthData = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    roles: userRoles,
-    accessToken: accessToken,
-  };
 
   res.cookie("jwt", refreshToken, {
     httpOnly: true,
     sameSite: "none",
     secure: true,
-    maxAge: oneDayinMillis,
+    maxAge: oneHourInMillis,
   });
-  res.json({ userAuthData });
+  res.json({ accessToken });
 });
 
 const handleRefreshTokenRequest = asyncHandler(
@@ -79,7 +71,7 @@ const handleRefreshTokenRequest = asyncHandler(
     const refreshToken = cookies.jwt;
 
     const user = await authService.queryUserByRefreshToken(refreshToken);
-    if (!user) return res.sendStatus(403);
+    if (!user) return res.sendStatus(401);
 
     const userRoles = await authService.queryRolesByUserId(user.id);
 
@@ -88,7 +80,7 @@ const handleRefreshTokenRequest = asyncHandler(
       process.env.REFRESH_TOKEN_SECRET as string,
       // TODO: identify according types for err and decoded
       (err: any, decoded: any) => {
-        if (err || user.id !== decoded.id) return res.sendStatus(403);
+        if (err || user.id !== decoded.id) return res.sendStatus(401);
         const accessToken = jwt.sign(
           {
             user: {
@@ -97,17 +89,10 @@ const handleRefreshTokenRequest = asyncHandler(
             },
           },
           process.env.ACCESS_TOKEN_SECRET as string,
-          { expiresIn: "1m" }
+          { expiresIn: process.env.ACCESS_TOKEN_EXPIRATION_TIME as string }
         );
 
-        const userAuthData = {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          roles: userRoles,
-          accessToken: accessToken,
-        };
-        res.json({ userAuthData });
+        res.json({ accessToken });
       }
     );
   }
