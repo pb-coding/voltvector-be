@@ -103,23 +103,15 @@ const updateUser = async (id: number, user: UpdateUserRequest) => {
 };
 
 const deleteUsers = async (ids: number[]) => {
-  try {
-    const deletedUser = await prisma.user.deleteMany({
-      where: {
-        id: {
-          in: ids,
-        },
+  const deletedUser = await prisma.user.deleteMany({
+    where: {
+      id: {
+        in: ids,
       },
-    });
-    console.log(`Deleted User(s) in Database: ${deletedUser}`);
-    return { success: true };
-  } catch (error) {
-    console.log(error);
-    return {
-      success: false,
-      error: `Something went wrong when deleting user(s): ${error}`,
-    };
-  }
+    },
+  });
+  console.log(`Deleted User(s) in Database: ${deletedUser}`);
+  return deletedUser;
 };
 
 export const userService = {

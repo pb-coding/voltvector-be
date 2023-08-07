@@ -362,3 +362,105 @@ Foreign key constraint failed on the field: `UserRole_userId_fkey (index)`
 2023-08-01 18:07:30	7ad547c6-dfd6-4a59-828d-b73d10caa345	TypeError: Cannot read properties of undefined (reading 'forEach')
 2023-08-01 18:14:07	1159787c-2da4-46e8-90ca-c10598a83a82	TypeError: Cannot read properties of undefined (reading 'forEach')
 2023-08-01 18:14:56	f88b99bf-eeaf-4331-9f53-e392dddbda7f	TypeError: Cannot read properties of undefined (reading 'forEach')
+2023-08-04 16:04:26	08eaff1b-0c6b-4939-8f44-6f3c290f3bef	PrismaClientKnownRequestError: 
+Invalid `prisma.user.create()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:58:37
+
+  55 const createUser = async (user: CreateUserRequest) => {
+  56   const hashedPassword = await bcrypt.hash(user.password, 10);
+  57 
+→ 58   const newUser = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2023-08-05 13:43:50	68b5473b-7f35-431f-bdf5-c7b9328ccd79	PrismaClientKnownRequestError: 
+Invalid `prisma.user.create()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:58:37
+
+  55 const createUser = async (user: CreateUserRequest) => {
+  56   const hashedPassword = await bcrypt.hash(user.password, 10);
+  57 
+→ 58   const newUser = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2023-08-07 10:21:20	4b254bdf-ff1b-4a2c-bee0-e7fb8814a979	myTestErrorHandler: undefined
+2023-08-07 10:21:48	7cccf534-1600-4ea8-889d-efe27b661616	myTestErrorHandler: undefined
+2023-08-07 10:31:57	3a47c4c6-976c-4359-9e2f-21ba092aa5af	PrismaClientKnownRequestError: 
+Invalid `prisma.user.create()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:58:37
+
+  55 const createUser = async (user: CreateUserRequest) => {
+  56   const hashedPassword = await bcrypt.hash(user.password, 10);
+  57 
+→ 58   const newUser = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2023-08-07 10:38:48	7b937fdb-1524-47af-8eba-1a5222ba2ce0	PrismaClientKnownRequestError: 
+Invalid `prisma.user.create()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:58:37
+
+  55 const createUser = async (user: CreateUserRequest) => {
+  56   const hashedPassword = await bcrypt.hash(user.password, 10);
+  57 
+→ 58   const newUser = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2023-08-07 10:39:12	31b00b39-289d-4688-aad6-f32a4a16dd8f	PrismaClientKnownRequestError: 
+Invalid `prisma.user.create()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:58:37
+
+  55 const createUser = async (user: CreateUserRequest) => {
+  56   const hashedPassword = await bcrypt.hash(user.password, 10);
+  57 
+→ 58   const newUser = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2023-08-07 12:36:35	4e1a2e77-ca7c-41a0-8473-d79ad0cfa7f5	PrismaClientKnownRequestError: 
+Invalid `prisma.user.create()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:58:37
+
+  55 const createUser = async (user: CreateUserRequest) => {
+  56   const hashedPassword = await bcrypt.hash(user.password, 10);
+  57 
+→ 58   const newUser = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2023-08-07 12:57:28	367a3a5f-bf9e-4753-a0d5-ecd5868a9a9a	PrismaClientKnownRequestError: 
+Invalid `prisma.user.create()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:58:37
+
+  55 const createUser = async (user: CreateUserRequest) => {
+  56   const hashedPassword = await bcrypt.hash(user.password, 10);
+  57 
+→ 58   const newUser = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2023-08-07 13:43:24	ec69e0f6-30d6-439d-a716-d4773cb4a7ab	PrismaClientKnownRequestError: 
+Invalid `prisma.user.create()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:58:37
+
+  55 const createUser = async (user: CreateUserRequest) => {
+  56   const hashedPassword = await bcrypt.hash(user.password, 10);
+  57 
+→ 58   const newUser = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2023-08-07 13:43:36	0673f8a8-52dd-4b2f-8bcf-2fa2e3dfd323	PrismaClientKnownRequestError: 
+Invalid `prisma.user.create()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:58:37
+
+  55 const createUser = async (user: CreateUserRequest) => {
+  56   const hashedPassword = await bcrypt.hash(user.password, 10);
+  57 
+→ 58   const newUser = await prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+2023-08-07 15:32:17	33ae044b-a33a-472e-b34a-2b9cab84f5ca	Error: Cannot set headers after they are sent to the client
+2023-08-07 16:20:20	42cfb6c6-a760-4e87-bebc-98a7d3caefd7	PrismaClientKnownRequestError: 
+Invalid `prisma.user.update()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:86:41
+
+  83     password: hashedPassword,
+  84   };
+  85 }
+→ 86 const updatedUser = await prisma.user.update(
+Unique constraint failed on the fields: (`email`)
+2023-08-07 18:09:27	d282bdbb-5271-472a-8d4c-87e67b175790	PrismaClientKnownRequestError: 
+Invalid `prisma.user.update()` invocation in
+D:\dev\voltvector\voltvector-be\src\user\userService.ts:86:41
+
+  83     password: hashedPassword,
+  84   };
+  85 }
+→ 86 const updatedUser = await prisma.user.update(
+Unique constraint failed on the fields: (`email`)

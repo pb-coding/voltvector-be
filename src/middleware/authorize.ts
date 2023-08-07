@@ -1,5 +1,6 @@
 import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { Role } from "@prisma/client";
 
 import {
   AuthPayloadType,
@@ -48,5 +49,11 @@ const verifyRoles = (
     if (!userRoles.includes(requiredRole)) return false;
     return true;
   });
+
+export const isAdmin = (roles: RoleType[] | undefined) =>
+  roles ? roles.includes(Role.ADMIN) : false;
+
+export const isUser = (roles: RoleType[] | undefined) =>
+  roles ? roles.includes(Role.USER) : false;
 
 export default authorize;

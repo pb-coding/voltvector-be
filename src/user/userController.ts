@@ -1,9 +1,11 @@
 import { NextFunction, Request, Response } from "express";
+
 import userService from "./userService";
 import { CreateUserRequest, UpdateUserRequest, UserType } from "./userTypes";
 import { asyncHandler } from "../middleware/errorHandler";
 import { validateRequestParams } from "../utils/helpers";
 import { AuthenticatedRequest } from "../auth/authTypes";
+import { isAdmin } from "../middleware/authorize";
 
 export const handleAllUsersRequest = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -20,7 +22,7 @@ export const handleUserByIdRequest = async (
 ) => {
   const providedId = req.params.id;
   const decodedId = req.id;
-  // const roles = req.roles;
+  const roles = req.roles;
 
   validateRequestParams(
     [
@@ -33,16 +35,18 @@ export const handleUserByIdRequest = async (
   const providedUserId = Number(providedId);
   const decodedUserId = decodedId as number;
 
-  console.log(`pathUserId: ${providedUserId}`);
+  console.log(`providedUserId: ${providedUserId}`);
   console.log(`decodedUserId: ${decodedUserId}`);
 
-  if (providedUserId !== 0 && providedUserId !== decodedUserId) {
+  if (
+    !isAdmin(roles) &&
+    providedUserId !== 0 &&
+    providedUserId !== decodedUserId
+  ) {
     // TODO: admins should be able to view other users' information
-    res
-      .status(403)
-      .json({
-        error: "You are not authorized to view this user's information",
-      });
+    res.status(403).json({
+      error: "You are not authorized to view this user's information",
+    });
     return;
   }
 
@@ -76,30 +80,59 @@ export const handleCreateUserRequest = asyncHandler(
       password,
     };
     const newUser = await userService.createUser(user);
-    res.json(newUser);
+    const message = `Successfully created user ${newUser.name} with id: ${newUser.id}`;
+    console.log(message);
+    res.json({ message });
   }
 );
 
 export const handleUpdateUserRequest = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-    const { email, name } = req.body as UpdateUserRequest;
+    const providedId = req.params.id;
+    const decodedId = req.id;
+    const roles = req.roles;
+    const { email, name, password } = req.body as UpdateUserRequest;
 
     validateRequestParams(
       [
-        { name: "user id", param: id, expectedType: "numeric" },
+        {
+          name: "provided user id",
+          param: providedId,
+          expectedType: "numeric",
+        },
         { name: "email", param: email, expectedType: "string" },
         { name: "name", param: name, expectedType: "string" },
       ],
       res
     );
 
+    const providedUserId = Number(providedId);
+    const decodedUserId = decodedId as number;
+
+    console.log(`providedUserId: ${providedUserId}`);
+    console.log(`decodedUserId: ${decodedUserId}`);
+
+    if (
+      !isAdmin(roles) &&
+      providedUserId !== 0 &&
+      providedUserId !== decodedUserId
+    ) {
+      // TODO: admins should be able to edit other users' information
+      res.status(403).json({
+        error: "You are not authorized to edit this user's information",
+      });
+      return;
+    }
+
     const user: UpdateUserRequest = {
       email,
       name,
+      password,
     };
-    const updatedUser = await userService.updateUser(Number(id), user);
-    res.json(updatedUser);
+    const updatedUser = await userService.updateUser(Number(providedId), user);
+    const message = `Successfully updated user ${updatedUser.name} with id: ${updatedUser.id}`;
+    console.log(message);
+    res.json({ message });
   }
 );
 
@@ -127,14 +160,8 @@ export const handleDeleteUserRequest = asyncHandler(
       console.log(`id: ${id}`);
     });
 
-    const dbInteraction = await userService.deleteUsers(userIds);
-    if (!dbInteraction.success) {
-      res.status(500).send(dbInteraction.error);
-      return;
-    }
-    res
-      .status(200)
-      .send("Deleted user(s) successfully with id(s): " + userIds.join(", "));
+    const deletedUsers = await userService.deleteUsers(userIds);
+    res.json(deletedUsers);
   }
 );
 
