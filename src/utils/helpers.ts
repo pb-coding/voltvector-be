@@ -61,3 +61,17 @@ export const validateRequestParams = (
     return success;
   });
 };
+
+export const isNotExpired = (date: Date, timeframeInMillis: number) => {
+  if (date == null) {
+    return false;
+  }
+  const lastUpdatedDate = new Date(date);
+  const diff = Math.abs(new Date().getTime() - lastUpdatedDate.getTime());
+
+  if (diff < timeframeInMillis) {
+    return true;
+  }
+
+  return false;
+};

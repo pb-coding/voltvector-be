@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../../middleware/errorHandler";
 import enphaseService from "./enphaseAuthService";
 import { validateRequestParams } from "../../utils/helpers";
+import { AuthenticatedRequest } from "../../auth/authTypes";
 
 const handleEnphaseOauthRequest = asyncHandler(
   async (req: Request, res: Response) => {
@@ -40,11 +41,11 @@ const handleEnphaseOauthRequest = asyncHandler(
 );
 
 const handleEnphaseAppsRequest = asyncHandler(
-  async (req: Request, res: Response) => {
-    const id = req.query.userid;
+  async (req: AuthenticatedRequest, res: Response) => {
+    const id = req.id;
 
     validateRequestParams(
-      [{ name: "user id", param: id, expectedType: "numeric" }],
+      [{ name: "decoded id", param: id, expectedType: "numeric" }],
       res
     );
 

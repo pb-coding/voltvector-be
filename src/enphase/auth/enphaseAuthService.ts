@@ -1,5 +1,5 @@
-import { prisma } from "../../lib/prisma";
-import enphaseClient from "./enphaseAuthClient";
+import enphaseAuthClient from "./enphaseAuthClient";
+import enphaseAuthRepository from "./enphaseAuthRepository";
 import enphaseApps from "./enphaseApps";
 
 const retrieveAndSaveEnphaseAuthTokens = async (
@@ -9,11 +9,12 @@ const retrieveAndSaveEnphaseAuthTokens = async (
 ) => {
   // TODO: check if user exists
 
-  const enphaseAuthTokens = await enphaseClient.requestEnphaseTokensByAuthCode(
-    userId,
-    applicationName,
-    code
-  );
+  const enphaseAuthTokens =
+    await enphaseAuthClient.requestEnphaseTokensByAuthCode(
+      userId,
+      applicationName,
+      code
+    );
   console.log(`enphaseAuthTokens: ${enphaseAuthTokens}`);
   if (
     !enphaseAuthTokens ||
@@ -23,7 +24,7 @@ const retrieveAndSaveEnphaseAuthTokens = async (
     return false;
   }
 
-  await saveEnphaseAuthTokens(
+  await enphaseAuthRepository.saveEnphaseAuthTokens(
     userId,
     applicationName,
     enphaseAuthTokens.access_token,
@@ -33,42 +34,29 @@ const retrieveAndSaveEnphaseAuthTokens = async (
   return true;
 };
 
-const saveEnphaseAuthTokens = async (
+const retrieveAndSaveEnphaseAuthTokensByRefreshToken = async (
   userId: number,
   applicationName: string,
-  accessToken: string,
   refreshToken: string
 ) => {
-  const app = await prisma.enphaseApp.upsert({
-    where: { name: applicationName },
-    update: {},
-    create: { name: applicationName },
-  });
+  const newTokens =
+    await enphaseAuthClient.requestRefreshedTokensByRefreshToken(
+      refreshToken,
+      applicationName
+    );
 
-  const userEnphaseApp = await prisma.userEnphaseApp.upsert({
-    where: {
-      userId_appId: {
-        userId: userId,
-        appId: app.id,
-      },
-    },
-    update: {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    },
-    create: {
-      userId: userId,
-      appId: app.id,
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    },
-    include: {
-      app: true,
-    },
-  });
+  if (!newTokens || !newTokens.access_token || !newTokens.refresh_token) {
+    throw new Error("Could not retrieve new tokens from enphase.");
+  }
 
-  console.log(`Saved enphaseAuthTokens: ${userEnphaseApp}`);
-  return userEnphaseApp;
+  await enphaseAuthRepository.saveEnphaseAuthTokens(
+    userId,
+    applicationName,
+    newTokens.access_token,
+    newTokens.refresh_token
+  );
+
+  return newTokens.access_token;
 };
 
 /**
@@ -78,7 +66,8 @@ const saveEnphaseAuthTokens = async (
  * @returns
  */
 const getEnphaseAppsByUserId = async (userId: number) => {
-  const userEnphaseApps = await querySavedEnphaseAppsByUserId(userId);
+  const userEnphaseApps =
+    await enphaseAuthRepository.querySavedEnphaseAppsByUserId(userId);
   const userAppMap = new Map(userEnphaseApps.map((app) => [app.app.name, app]));
 
   const allEnphaseAppsClientIds = enphaseApps.map((app) => {
@@ -97,23 +86,9 @@ const getEnphaseAppsByUserId = async (userId: number) => {
   return allEnphaseAppsClientIds;
 };
 
-const querySavedEnphaseAppsByUserId = async (userId: number) => {
-  console.log(`Querying saved enphase apps for user ${userId}`);
-  const userEnphaseApps = await prisma.userEnphaseApp.findMany({
-    where: {
-      userId: userId,
-    },
-    include: {
-      app: true,
-    },
-  });
-  console.log(`Got userEnphaseApps: ${userEnphaseApps}`);
-  return userEnphaseApps;
-};
-
 const enphaseAuthService = {
   retrieveAndSaveEnphaseAuthTokens,
-  saveEnphaseAuthTokens,
+  retrieveAndSaveEnphaseAuthTokensByRefreshToken,
   getEnphaseAppsByUserId,
 };
 export default enphaseAuthService;

@@ -464,3 +464,991 @@ D:\dev\voltvector\voltvector-be\src\user\userService.ts:86:41
   85 }
 → 86 const updatedUser = await prisma.user.update(
 Unique constraint failed on the fields: (`email`)
+2023-08-08 12:27:33	675c6302-c181-4483-898a-b6ae31f18845	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:27:40	f6fc0187-4226-4afa-a26f-1e9eb9e81a59	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:31:08	75325504-518d-4596-842e-1bd290767f57	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:34:01	564b3fdf-7f44-4e21-9d7a-ec9a1b83e53e	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:37:40	4e6fcd7e-7d8b-483b-8a35-1ac2c2957404	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:43:13	392afc6c-9d93-4ca5-87a9-1224ec6a2ce4	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:43:32	21cf87e1-34ea-4c9b-bc8d-3cae098a659b	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:43:52	4a199b6f-575b-44d8-827a-6df561853563	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:46:01	3c4fa40e-9980-4f82-9db2-063781e14c3d	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:47:15	91f2b62a-8315-4b6a-abc3-b95e703bc915	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:47:35	bd40204e-555a-4208-832c-c64d67f3815f	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:50:05	42388ea3-701b-436c-8854-bcb90831c61d	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:50:08	de64a68f-d96b-4c5e-a348-2f164862a8ce	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:50:20	75dd2bb8-491c-46ad-a444-6ca749499a99	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:50:55	e59c095e-8b20-4a79-a135-a4e4f3a40345	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:51:11	2664c1bf-b7ba-4365-a807-b7f350cb557b	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:52:09	cf5e0858-102b-46fc-a770-819a07e63b96	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:52:27	f4dee760-35b1-4253-ba01-a99781bbb390	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:52:29	a96b3372-35cd-4522-a508-2e5fa0f00e87	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:52:43	57adafc2-285a-48a0-8c6a-2ff8bc51a56e	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:52:47	6aebe911-4579-4175-aa97-2a4804b7861f	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:53:36	59d20fa8-8400-47ba-a1b6-72e6d2e5b1d4	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:53:51	3fe5b594-d12a-4b4a-bf00-b9a79390c537	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:54:02	4b1895d3-9f9e-49d8-a57d-98af6667bac6	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:54:07	534e97dc-8951-462b-a6ce-0dcda2fab524	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:54:10	8c6a3721-897c-460b-877e-5829c2f1f5b0	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:54:13	6a9c97f3-3976-4686-a786-b438a9dc7135	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:54:23	f049310c-9c59-4af2-b3ee-be0a905d5206	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:54:33	544d25eb-67b0-4e15-b6b5-f000d8cfb63d	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:54:40	a15c4ed3-1c5d-4f91-a716-da340a078ee4	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:54:53	2837bde1-1bce-493a-bc8a-dffcc88c62b6	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:55:25	6416ecab-df48-4f4d-9eaf-edd6afb13b3a	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:55:29	7083b1ae-b6f8-4e6c-adab-e67fd01ce801	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:55:38	30ef25d7-c45f-420d-81e8-fa4baaafb24f	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:57:09	68be2d77-71ec-4aa9-b094-80d36add978f	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:57:21	4aae65a8-b91c-4faf-90d1-203ca336dd3c	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:57:51	cb74ff68-d1e3-46c2-94bd-498b4ecfc159	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
+2023-08-08 12:57:57	d5feee6d-9df5-40c5-9775-b459e60e5001	PrismaClientValidationError: 
+Invalid `prisma.userEnphaseApp.findMany()` invocation in
+D:\dev\voltvector\voltvector-be\src\enphase\auth\enphaseAuthService.ts:102:55
+
+   99 
+  100 const querySavedEnphaseAppsByUserId = async (userId: number) => {
+  101   console.log(`Querying saved enphase apps for user ${userId}`);
+→ 102   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
+          where: {
+        +   userId: {
+        +     equals: Int | IntFieldRefInput,
+        +     in: Int[] | ListIntFieldRefInput,
+        +     notIn: Int[] | ListIntFieldRefInput,
+        +     lt: Int | IntFieldRefInput,
+        +     lte: Int | IntFieldRefInput,
+        +     gt: Int | IntFieldRefInput,
+        +     gte: Int | IntFieldRefInput,
+        +     not: Int | NestedIntFilter
+        +   }
+          },
+          include: {
+            app: true
+          }
+        })
+
+Argument `userId` is missing.
