@@ -1,30 +1,20 @@
 import enphaseAuthClient from "../auth/enphaseAuthClient";
 import enphaseAuthRepository from "../auth/enphaseAuthRepository";
 import enphaseAuthService from "../auth/enphaseAuthService";
+import enphaseEnergyClient from "./enphaseEnergyClient";
+import enphaseEnergyRepository from "./enphaseEnergyRepository";
+import enphaseApps from "../auth/enphaseApps";
 import { isNotExpired } from "../../utils/helpers";
 import { oneDayinMillis, oneWeekInMillis } from "../../utils/constants";
-import { prisma } from "../../lib/prisma";
 import { ExtendedUserEnphaseApp } from "../auth/enphaseAuthTypes";
-
-const queryEnergyDataByUserId = async (userId: number) => {
-  const energyData = await prisma.energyData.findMany({
-    where: {
-      userId: userId,
-    },
-    select: {
-      id: true,
-      userId: true,
-      userAppId: true,
-      systemId: true,
-      endDate: true,
-      production: true,
-      consumption: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-  return energyData;
-};
+import {
+  ConsumptionDataResponse,
+  ConsumptionInterval,
+  EnergyInterval,
+  ProductionDataResponse,
+  ProductionInterval,
+  EnphaseRequestKind,
+} from "./enphaseEnergyTypes";
 
 /**
  * This function identifies the longest unused enphase app for the given user and app name.
@@ -33,62 +23,66 @@ const queryEnergyDataByUserId = async (userId: number) => {
  * @param appName
  * @returns longest unused but authorized enphase app for the given user and app name
  */
-const identifyEnphaseApp = async (userId: number, appName: string) => {
+const identifyEnphaseApp = async (userId: number) => {
   // all enphase apps the user had authorized at some point in time
-  console.log(`userId: ${userId} appName: ${appName}`);
-  const userEnphaseApps =
-    await enphaseAuthService.querySavedEnphaseAppsByUserId(userId);
+  const authorizedUserApps =
+    await enphaseAuthRepository.querySavedEnphaseAppsByUserId(userId);
 
-  console.log(`userEnphaseApps: ${JSON.stringify(userEnphaseApps)}`);
-  if (userEnphaseApps.length === 0) {
+  if (authorizedUserApps.length === 0) {
     console.log(
       `No enphase apps for user with id ${userId} found. Skipping user.`
     );
     return;
   }
+  console.log(
+    `Found ${authorizedUserApps.length} authorized user enphase apps for user ${userId}`
+  );
 
-  // all enphase apps the user has authorized that have a not expired refresh token and meet the app name criteria
-  const authorizedEnphaseApps = userEnphaseApps.filter(
-    (userApp) =>
+  // all enphase apps the user has authorized that have a not expired refresh token
+  const activeUserApps = authorizedUserApps.filter(
+    (userApp: ExtendedUserEnphaseApp) =>
       userApp.app.name !== null &&
-      userApp.app.name.includes(appName) &&
       userApp.refreshToken !== null &&
       isNotExpired(userApp.updatedAt, oneWeekInMillis)
   );
-  console.log(
-    `authorizedEnphaseApps: ${JSON.stringify(authorizedEnphaseApps)}`
-  );
 
-  if (authorizedEnphaseApps.length === 0) {
+  if (activeUserApps.length === 0) {
     console.log(
-      `No authorized enphase apps for ${appName} for user with id ${userId} found. Skipping user.`
+      `No authorized enphase apps for user with id ${userId} found. Skipping user.`
     );
     return;
   }
+  console.log(
+    `Found ${activeUserApps.length} active user enphase apps for user ${userId}`
+  );
 
   // identify if enphase apps where used previously for the given user
-  const energyData = await queryEnergyDataByUserId(userId);
+  const energyData = await enphaseEnergyRepository.queryEnergyDataByUserId(
+    userId
+  );
   if (!energyData || energyData.length == 0) {
     // if no apps were used previously, return the first authorized enphase app
-    return authorizedEnphaseApps[0];
+    return activeUserApps[0];
   }
 
   // identify previously used enphase apps for the given user
-  const usedUserEnphaseApps = energyData.map((entry) => [
+  const existingIntervals = energyData.map((entry) => [
     entry.userAppId,
     entry.updatedAt,
   ]);
-  console.log(`usedUserEnphaseApps: ${JSON.stringify(usedUserEnphaseApps)}`);
+  console.log(
+    `Found ${existingIntervals.length} existing intervals for user with id ${userId}.`
+  );
 
   // use unused enphase apps first if available
-  const unusedUserEnphaseApps = authorizedEnphaseApps.filter(
-    (userApp) =>
-      !usedUserEnphaseApps.some(
-        (appDateArray) => appDateArray[0] === userApp.id
+  const unusedUserEnphaseApps = activeUserApps.filter(
+    (userApp: ExtendedUserEnphaseApp) =>
+      !existingIntervals.some(
+        (appDateInterval) => appDateInterval[0] === userApp.id
       )
   );
   console.log(
-    `unusedUserEnphaseApps: ${JSON.stringify(unusedUserEnphaseApps)}`
+    `Found ${unusedUserEnphaseApps.length} unused user enphase apps for user with id ${userId}.`
   );
 
   // if unused enphase apps are available, return the first one
@@ -97,7 +91,7 @@ const identifyEnphaseApp = async (userId: number, appName: string) => {
   }
 
   // if no unused enphase apps are available, return the longest unused enphase app
-  const longestUnusedUserEnphaseApp = usedUserEnphaseApps.reduce(
+  const longestUnusedUserEnphaseApp = existingIntervals.reduce(
     (accumulator, currentValue) => {
       if (currentValue[1] < accumulator[1]) {
         return accumulator;
@@ -109,8 +103,9 @@ const identifyEnphaseApp = async (userId: number, appName: string) => {
 
   const longestUnusedUserEnphaseAppId = longestUnusedUserEnphaseApp[0];
 
-  return authorizedEnphaseApps.find(
-    (authorizedApp) => authorizedApp.id === longestUnusedUserEnphaseAppId
+  return activeUserApps.find(
+    (authorizedApp: ExtendedUserEnphaseApp) =>
+      authorizedApp.id === longestUnusedUserEnphaseAppId
   );
 };
 
@@ -135,19 +130,59 @@ const verifyAuthTokensAndRefreshIfNeeded = async (
   return;
 };
 
-const getEnphaseData = async (enphaseApp: ExtendedUserEnphaseApp) => {
+const getEnphaseData = async <EnphaseDataType>(
+  enphaseApp: ExtendedUserEnphaseApp,
+  solarSystemId: number,
+  requestKind: EnphaseRequestKind
+): Promise<EnphaseDataType> => {
   await verifyAuthTokensAndRefreshIfNeeded(enphaseApp);
   const freshEnphaseApp = await enphaseAuthRepository.queryEnphaseAppById(
     enphaseApp.id
   );
-  const data = fetchEnphaseData(accessToken);
-  return data;
+
+  let data;
+  const accessToken = freshEnphaseApp?.accessToken;
+  const apiKey = enphaseApps.find(
+    (app) => app.name === freshEnphaseApp?.app.name
+  )?.apiKey;
+
+  if (!accessToken || !solarSystemId || !apiKey)
+    throw "Essential data of enphase app missing..";
+
+  if (requestKind === ("production" as EnphaseRequestKind)) {
+    data = await enphaseEnergyClient.requestProductionData(
+      accessToken,
+      solarSystemId,
+      apiKey
+    );
+  } else if (requestKind === ("consumption" as EnphaseRequestKind)) {
+    data = await enphaseEnergyClient.requestConsumptionData(
+      accessToken,
+      solarSystemId,
+      apiKey
+    );
+  } else {
+    throw new Error("Invalid enphase app.");
+  }
+  console.log(`App ${freshEnphaseApp?.app.name} made a request.`);
+  return data as EnphaseDataType;
 };
 
 const mergeProductionAndConsumptionData = (
-  productionData,
-  consumptionData
-) => {};
+  productionIntervals: ProductionInterval[],
+  consumptionIntervals: ConsumptionInterval[]
+): EnergyInterval[] => {
+  return productionIntervals.map((productionInterval) => {
+    const consumptionInterval = consumptionIntervals.find(
+      (it) => it.end_at === productionInterval.end_at
+    );
+    return {
+      end_at: productionInterval.end_at,
+      production: productionInterval.wh_del,
+      consumption: consumptionInterval?.enwh ?? 0,
+    };
+  });
+};
 
 /**
  * identify users for which energy data fetching is available (currently Admin user only)
@@ -159,40 +194,48 @@ const mergeProductionAndConsumptionData = (
  * - merge energy data into db and update user's energy data
  */
 const updateEnergyDataJob = () => {
-  const userIds = [2]; // For now we fetch data only for user with id 2
+  const userIds = [1]; // For now we fetch data only for user with id 1
+  const solarSystemId = 3447361; // TODO: get solarSystemId from db
 
   userIds.forEach(async (userId) => {
-    const productionEnphaseApp = await identifyEnphaseApp(userId, "production");
-    const consumptionEnphaseApp = await identifyEnphaseApp(
-      userId,
-      "consumption"
-    );
-    if (!productionEnphaseApp || !consumptionEnphaseApp) {
+    const activeEnphaseApp = await identifyEnphaseApp(userId);
+
+    if (!activeEnphaseApp) {
       console.log(
         `No production or consumption enphase app for user with id ${userId} found. Skipping user.`
       );
       return;
     }
     console.log(
-      `productionEnphaseApp: ${JSON.stringify(productionEnphaseApp)}`
-    );
-    console.log(
-      `consumptionEnphaseApp: ${JSON.stringify(consumptionEnphaseApp)}`
+      `Identified enphase app ${activeEnphaseApp.app.name} to make request for user with id ${userId}.`
     );
 
-    const productionData = getEnphaseData(productionEnphaseApp);
-    const consumptionData = getEnphaseData(consumptionEnphaseApp);
+    const productionData = await getEnphaseData<ProductionDataResponse>(
+      activeEnphaseApp,
+      solarSystemId,
+      "production" as EnphaseRequestKind
+    );
+    const consumptionData = await getEnphaseData<ConsumptionDataResponse>(
+      activeEnphaseApp,
+      solarSystemId,
+      "consumption" as EnphaseRequestKind
+    );
 
     const energyData = mergeProductionAndConsumptionData(
-      productionData,
-      consumptionData
+      productionData.intervals,
+      consumptionData.intervals
     );
 
-    // save energy data to db
-  });
+    console.log(`Fetched ${energyData.length} energy data intervals.`);
 
-  // const enphaseApps = get
-  // const responsibleApps = enphaseAppTimeplan.filter((app) => {}
+    const updatedRows = await enphaseEnergyRepository.saveEnergyData(
+      userId,
+      activeEnphaseApp.id,
+      solarSystemId,
+      energyData
+    );
+    console.log(`Updated ${updatedRows} rows.`);
+  });
 };
 
 const enphaseEnergyService = {

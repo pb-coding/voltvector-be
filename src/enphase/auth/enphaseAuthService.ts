@@ -41,8 +41,8 @@ const retrieveAndSaveEnphaseAuthTokensByRefreshToken = async (
 ) => {
   const newTokens =
     await enphaseAuthClient.requestRefreshedTokensByRefreshToken(
-      refreshToken,
-      applicationName
+      applicationName,
+      refreshToken
     );
 
   if (!newTokens || !newTokens.access_token || !newTokens.refresh_token) {
@@ -65,7 +65,7 @@ const retrieveAndSaveEnphaseAuthTokensByRefreshToken = async (
  * @param userId
  * @returns
  */
-const getEnphaseAppsByUserId = async (userId: number) => {
+const getEnphaseAppsOverviewByUserId = async (userId: number) => {
   const userEnphaseApps =
     await enphaseAuthRepository.querySavedEnphaseAppsByUserId(userId);
   const userAppMap = new Map(userEnphaseApps.map((app) => [app.app.name, app]));
@@ -89,6 +89,6 @@ const getEnphaseAppsByUserId = async (userId: number) => {
 const enphaseAuthService = {
   retrieveAndSaveEnphaseAuthTokens,
   retrieveAndSaveEnphaseAuthTokensByRefreshToken,
-  getEnphaseAppsByUserId,
+  getEnphaseAppsOverviewByUserId,
 };
 export default enphaseAuthService;

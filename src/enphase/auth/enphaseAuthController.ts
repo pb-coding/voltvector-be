@@ -51,7 +51,9 @@ const handleEnphaseAppsRequest = asyncHandler(
 
     const userId = Number(id);
 
-    const apps = await enphaseService.getEnphaseAppsByUserId(Number(userId));
+    const apps = await enphaseService.getEnphaseAppsOverviewByUserId(
+      Number(userId)
+    );
     res.json(apps);
   }
 );

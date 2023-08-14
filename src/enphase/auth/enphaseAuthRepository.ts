@@ -48,7 +48,6 @@ const querySavedEnphaseAppsByUserId = async (userId: number) => {
       app: true,
     },
   });
-  console.log(`Got userEnphaseApps: ${userEnphaseApps}`);
   return userEnphaseApps;
 };
 
@@ -61,7 +60,6 @@ const queryEnphaseAppById = async (userAppId: number) => {
       app: true,
     },
   });
-  console.log(`Got userEnphaseApp: ${userEnphaseApp}`);
   return userEnphaseApp;
 };
 

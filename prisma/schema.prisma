@@ -79,7 +79,7 @@ model EnergyData {
   user          User        @relation(fields: [userId], references: [id])
   userApp       UserEnphaseApp  @relation(fields: [userAppId], references: [id])
 
-  @@unique([userId, userAppId, endDate])
+  @@unique([userId, endDate])
 }
 
 enum Role {
