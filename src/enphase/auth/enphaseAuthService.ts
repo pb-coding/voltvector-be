@@ -79,10 +79,6 @@ const getEnphaseAppsOverviewByUserId = async (userId: number) => {
       issueDate: userEnphaseApp?.updatedAt ?? null,
     };
   });
-
-  console.log(
-    `allEnphaseAppsClientIds for user ${userId}: ${allEnphaseAppsClientIds}`
-  );
   return allEnphaseAppsClientIds;
 };
 

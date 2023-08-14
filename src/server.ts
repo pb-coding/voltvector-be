@@ -10,6 +10,7 @@ import cookieParser from "cookie-parser";
 import rootRouter from "./routes/root";
 import authRouter from "./routes/auth";
 import enphaseRouter from "./routes/enphase";
+import energyRouter from "./routes/energy";
 import userRouter from "./routes/user";
 
 // Initialize cron jobs
@@ -34,6 +35,7 @@ app.use(cookieParser());
 app.use("/", rootRouter);
 app.use("/auth", authRouter);
 app.use("/enphase", enphaseRouter);
+app.use("/energy", energyRouter);
 app.use("/user", userRouter);
 
 app.all("*", (req: Request, res: Response) => {

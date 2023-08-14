@@ -17,6 +17,60 @@ import {
 } from "./enphaseEnergyTypes";
 
 /**
+ * identify users for which energy data fetching is available (currently Admin user only)
+ * for each user:
+ * - check the amount of authorized user enphase apps - otherwise skip user
+ * - refresh access token of the user enphase app if needed
+ * - fetch production and consumption data
+ * - merge production and consumption data to energy data
+ * - merge energy data into db and update user's energy data
+ */
+const updateEnergyDataJob = () => {
+  const userIds = [2]; // For now we fetch data only for user with id 1
+  const solarSystemId = 3447361; // TODO: get solarSystemId from db
+
+  userIds.forEach(async (userId) => {
+    const activeEnphaseApp = await identifyEnphaseApp(userId);
+
+    if (!activeEnphaseApp) {
+      console.log(
+        `No enphase app for user with id ${userId} found. Skipping user.`
+      );
+      return;
+    }
+    console.log(
+      `Identified enphase app ${activeEnphaseApp.app.name} to make request for user with id ${userId}.`
+    );
+
+    const productionData = await getEnphaseData<ProductionDataResponse>(
+      activeEnphaseApp,
+      solarSystemId,
+      "production" as EnphaseRequestKind
+    );
+    const consumptionData = await getEnphaseData<ConsumptionDataResponse>(
+      activeEnphaseApp,
+      solarSystemId,
+      "consumption" as EnphaseRequestKind
+    );
+
+    const energyData = mergeProductionAndConsumptionData(
+      productionData.intervals,
+      consumptionData.intervals
+    );
+
+    console.log(`Fetched ${energyData.length} energy data intervals.`);
+
+    const updatedRows = await enphaseEnergyRepository.saveEnergyData(
+      userId,
+      activeEnphaseApp.id,
+      solarSystemId,
+      energyData
+    );
+    console.log(`Updated ${updatedRows} rows.`);
+  });
+};
+
+/**
  * This function identifies the longest unused enphase app for the given user and app name.
  * Goal is to cycle through the enphase apps so that we don't hit the enphase API rate limit.
  * @param userId
@@ -184,62 +238,32 @@ const mergeProductionAndConsumptionData = (
   });
 };
 
-/**
- * identify users for which energy data fetching is available (currently Admin user only)
- * for each user:
- * - check the amount of authorized enphase production and consumption apps - otherwise skip user
- * - refresh access token of the userApp if needed
- * - fetch production and consumption data
- * - merge production and consumption data to energy data
- * - merge energy data into db and update user's energy data
- */
-const updateEnergyDataJob = () => {
-  const userIds = [1]; // For now we fetch data only for user with id 1
-  const solarSystemId = 3447361; // TODO: get solarSystemId from db
+const getEnergyData = async (userId: number, startAt: Date, endAt: Date) => {
+  const selectedFields = {
+    id: true,
+    userId: false,
+    userAppId: false,
+    systemId: true,
+    endDate: true,
+    production: true,
+    consumption: true,
+    createdAt: false,
+    updatedAt: false,
+  };
 
-  userIds.forEach(async (userId) => {
-    const activeEnphaseApp = await identifyEnphaseApp(userId);
-
-    if (!activeEnphaseApp) {
-      console.log(
-        `No production or consumption enphase app for user with id ${userId} found. Skipping user.`
-      );
-      return;
-    }
-    console.log(
-      `Identified enphase app ${activeEnphaseApp.app.name} to make request for user with id ${userId}.`
-    );
-
-    const productionData = await getEnphaseData<ProductionDataResponse>(
-      activeEnphaseApp,
-      solarSystemId,
-      "production" as EnphaseRequestKind
-    );
-    const consumptionData = await getEnphaseData<ConsumptionDataResponse>(
-      activeEnphaseApp,
-      solarSystemId,
-      "consumption" as EnphaseRequestKind
-    );
-
-    const energyData = mergeProductionAndConsumptionData(
-      productionData.intervals,
-      consumptionData.intervals
-    );
-
-    console.log(`Fetched ${energyData.length} energy data intervals.`);
-
-    const updatedRows = await enphaseEnergyRepository.saveEnergyData(
+  const energyData =
+    await enphaseEnergyRepository.queryEnergyDataByUserIdAndDateInterval(
       userId,
-      activeEnphaseApp.id,
-      solarSystemId,
-      energyData
+      startAt,
+      endAt,
+      selectedFields
     );
-    console.log(`Updated ${updatedRows} rows.`);
-  });
+  return energyData;
 };
 
 const enphaseEnergyService = {
   updateEnergyDataJob,
+  getEnergyData,
 };
 
 export default enphaseEnergyService;

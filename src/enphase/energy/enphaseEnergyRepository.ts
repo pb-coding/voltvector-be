@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 
 import { EnergyInterval } from "./enphaseEnergyTypes";
@@ -55,9 +56,32 @@ const saveEnergyData = async (
   return data.length;
 };
 
+const queryEnergyDataByUserIdAndDateInterval = async (
+  userId: number,
+  startDate: Date,
+  endDate: Date,
+  selectedFields?: Partial<Prisma.EnergyDataSelect>
+) => {
+  const energyData = await prisma.energyData.findMany({
+    where: {
+      userId: userId,
+      endDate: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
+    select: selectedFields,
+    orderBy: {
+      endDate: "asc",
+    },
+  });
+  return energyData;
+};
+
 const enphaseEnergyRepository = {
   queryEnergyDataByUserId,
   saveEnergyData,
+  queryEnergyDataByUserIdAndDateInterval,
 };
 
 export default enphaseEnergyRepository;

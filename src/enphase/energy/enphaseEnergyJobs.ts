@@ -2,8 +2,8 @@ import cron from "node-cron";
 import enphaseEnergyService from "./enphaseEnergyService";
 
 // cron job that runs every 15 minutes to fetch enphase energy data
-// added 1 minute offset to give enphase time to update their data first and get the latest data
-cron.schedule("3,18,33,48 * * * *", () => {
+// added 5 minute offset to give enphase time to update their data first and get the latest data
+cron.schedule("5,20,35,50 * * * *", () => {
   console.log("Cron job (starting): Fetch enphase data");
   enphaseEnergyService.updateEnergyDataJob();
   console.log("Cron job (finished): Fetch enphase data");
