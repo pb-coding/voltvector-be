@@ -26,7 +26,7 @@ import {
  * - merge energy data into db and update user's energy data
  */
 const updateEnergyDataJob = () => {
-  const userIds = [2]; // For now we fetch data only for user with id 1
+  const userIds = [1]; // For now we fetch data only for user with id 1
   const solarSystemId = 3447361; // TODO: get solarSystemId from db
 
   userIds.forEach(async (userId) => {

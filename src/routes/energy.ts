@@ -13,4 +13,10 @@ energyRouter.get(
   enphaseEnergyController.handleEnphaseEnergyGetRequest
 );
 
+energyRouter.get(
+  "/triggerUpdateJob",
+  authorize([Role.ADMIN]),
+  enphaseEnergyController.triggerUpdateEnergyDataJob
+);
+
 export default energyRouter;

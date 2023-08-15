@@ -1,5 +1,4 @@
-import { Response } from "express";
-import dateFns from "date-fns";
+import { Response, NextFunction } from "express";
 
 import { AuthenticatedRequest } from "../../auth/authTypes";
 import { asyncHandler } from "../../middleware/errorHandler";
@@ -34,8 +33,16 @@ const handleEnphaseEnergyGetRequest = asyncHandler(
   }
 );
 
+const triggerUpdateEnergyDataJob = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    res.status(202).json({ message: "Job trigger accepted" });
+    enphaseEnergyService.updateEnergyDataJob();
+  }
+);
+
 const enphaseEnergyController = {
   handleEnphaseEnergyGetRequest,
+  triggerUpdateEnergyDataJob,
 };
 
 export default enphaseEnergyController;
