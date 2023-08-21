@@ -19,4 +19,10 @@ energyRouter.get(
   enphaseEnergyController.triggerUpdateEnergyDataJob
 );
 
+energyRouter.get(
+  "/triggerVerificationJob",
+  authorize([Role.ADMIN]),
+  enphaseEnergyController.triggerDataVerificationJob
+);
+
 export default energyRouter;

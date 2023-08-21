@@ -11,3 +11,8 @@ cron.schedule("5,20,35,50 * * * *", () => {
 
 // TODO: implement cron job that verifies for consistency of data once a day.
 // if the backend is down for more than 24 hours, gaps need to be identified and specifically requested from enphase to be filled.
+cron.schedule("0 5 * * *", () => {
+  console.log("Cron job (starting): Verify enphase data");
+  enphaseEnergyService.verifyEnergyDataConsistencyJob();
+  console.log("Cron job (finished): Verify enphase data");
+});

@@ -1,3 +1,13 @@
+import {
+  differenceInMinutes,
+  isBefore,
+  addMinutes,
+  startOfDay,
+  addDays,
+} from "date-fns";
+
+import enphaseService from "../enphaseService";
+import enphaseRepository from "../enphaseRepository";
 import enphaseAuthClient from "../auth/enphaseAuthClient";
 import enphaseAuthRepository from "../auth/enphaseAuthRepository";
 import enphaseAuthService from "../auth/enphaseAuthService";
@@ -13,8 +23,10 @@ import {
   EnergyInterval,
   ProductionDataResponse,
   ProductionInterval,
-  EnphaseRequestKind,
 } from "./enphaseEnergyTypes";
+
+const userIdsToUpdate = [2]; // For now we fetch data only for the admin user TODO: fetch all users from db
+const solarSystemId = 3447361; // TODO: get solarSystemId from db
 
 /**
  * identify users for which energy data fetching is available (currently Admin user only)
@@ -25,11 +37,13 @@ import {
  * - merge production and consumption data to energy data
  * - merge energy data into db and update user's energy data
  */
-const updateEnergyDataJob = () => {
-  const userIds = [1]; // For now we fetch data only for user with id 1
-  const solarSystemId = 3447361; // TODO: get solarSystemId from db
+const updateEnergyDataJob = async (
+  selectedUserIds?: number[],
+  dayToFetchDate?: Date
+) => {
+  const userIds = !selectedUserIds ? userIdsToUpdate : selectedUserIds;
 
-  userIds.forEach(async (userId) => {
+  for (const userId of userIds) {
     const activeEnphaseApp = await identifyEnphaseApp(userId);
 
     if (!activeEnphaseApp) {
@@ -39,18 +53,21 @@ const updateEnergyDataJob = () => {
       return;
     }
     console.log(
-      `Identified enphase app ${activeEnphaseApp.app.name} to make request for user with id ${userId}.`
+      `Identified enphase app ${activeEnphaseApp.app.name} with id ${activeEnphaseApp.id} to make request for user with id ${userId}.`
     );
 
     const productionData = await getEnphaseData<ProductionDataResponse>(
+      enphaseEnergyClient.requestProductionData,
       activeEnphaseApp,
       solarSystemId,
-      "production" as EnphaseRequestKind
+      dayToFetchDate
     );
+
     const consumptionData = await getEnphaseData<ConsumptionDataResponse>(
+      enphaseEnergyClient.requestConsumptionData,
       activeEnphaseApp,
       solarSystemId,
-      "consumption" as EnphaseRequestKind
+      dayToFetchDate
     );
 
     const energyData = mergeProductionAndConsumptionData(
@@ -67,7 +84,64 @@ const updateEnergyDataJob = () => {
       energyData
     );
     console.log(`Updated ${updatedRows} rows.`);
-  });
+  }
+};
+
+const verifyEnergyDataConsistencyJob = async (
+  selectedUserIds: number[] | null = null,
+  readOnly?: boolean
+) => {
+  const userIds = !selectedUserIds ? userIdsToUpdate : selectedUserIds;
+
+  for (const userId of userIds) {
+    const fullEnergyDataOfUser = await getEnergyData(userId);
+
+    const daysWithGaps: Date[] = [];
+    fullEnergyDataOfUser.forEach((energyData, index) => {
+      if (index === 0) return;
+      const previous = fullEnergyDataOfUser[index - 1];
+      const previousEndDate = previous.endDate;
+      const currentEndDate = energyData.endDate;
+      if (!previousEndDate || !currentEndDate) return;
+      const difference = differenceInMinutes(currentEndDate, previousEndDate);
+      if (difference > 15) {
+        console.log(
+          `Found gap of ${difference} minutes between ${previousEndDate} and ${currentEndDate}`
+        );
+        const dayWithGaps = startOfDay(addMinutes(previousEndDate, 15));
+        daysWithGaps.push(dayWithGaps);
+
+        const differenceInDays = difference / 60 / 24;
+        if (differenceInDays > 1) {
+          console.log("Gap is bigger than 1 day: " + differenceInDays);
+          const amountOfDaysMissing = Math.floor(differenceInDays) + 1;
+          for (let i = 1; i < amountOfDaysMissing; i++) {
+            const dayWithGaps = startOfDay(addDays(previousEndDate, i));
+            daysWithGaps.push(dayWithGaps);
+          }
+        }
+      }
+    });
+    const uniqueDaysWithGaps = [
+      ...new Set(daysWithGaps.map((date) => date.getTime())),
+    ].map((time) => new Date(time));
+    if (uniqueDaysWithGaps.length === 0) {
+      console.log("No gaps found.");
+      return;
+    }
+    console.log(uniqueDaysWithGaps);
+
+    if (readOnly) {
+      console.log("Read only mode, not updating energy data.");
+      return;
+    }
+
+    for (const day of uniqueDaysWithGaps) {
+      await updateEnergyDataJob([userId], day);
+    }
+
+    console.log("Job: Verify energy data consistency finished.");
+  }
 };
 
 /**
@@ -111,27 +185,27 @@ const identifyEnphaseApp = async (userId: number) => {
   );
 
   // identify if enphase apps where used previously for the given user
-  const energyData = await enphaseEnergyRepository.queryEnergyDataByUserId(
-    userId
-  );
-  if (!energyData || energyData.length == 0) {
+  const enphaseApiRequest =
+    await enphaseRepository.queryEnphaseApiRequestsByUserId(userId);
+
+  if (!enphaseApiRequest || enphaseApiRequest.length == 0) {
     // if no apps were used previously, return the first authorized enphase app
     return activeUserApps[0];
   }
 
   // identify previously used enphase apps for the given user
-  const existingIntervals = energyData.map((entry) => [
+  const priorUserAppUsages = enphaseApiRequest.map((entry) => [
     entry.userAppId,
     entry.updatedAt,
   ]);
   console.log(
-    `Found ${existingIntervals.length} existing intervals for user with id ${userId}.`
+    `Found ${priorUserAppUsages.length} prior user app usages for user with id ${userId}.`
   );
 
   // use unused enphase apps first if available
   const unusedUserEnphaseApps = activeUserApps.filter(
     (userApp: ExtendedUserEnphaseApp) =>
-      !existingIntervals.some(
+      !priorUserAppUsages.some(
         (appDateInterval) => appDateInterval[0] === userApp.id
       )
   );
@@ -141,21 +215,38 @@ const identifyEnphaseApp = async (userId: number) => {
 
   // if unused enphase apps are available, return the first one
   if (unusedUserEnphaseApps.length > 0) {
+    console.log("Returning first unused enphase app:");
     return unusedUserEnphaseApps[0];
   }
 
-  // if no unused enphase apps are available, return the longest unused enphase app
-  const longestUnusedUserEnphaseApp = existingIntervals.reduce(
-    (accumulator, currentValue) => {
-      if (currentValue[1] < accumulator[1]) {
-        return accumulator;
-      } else {
-        return currentValue;
-      }
+  // identify the latest interval for each enphase app
+  const latestUserAppUsages = priorUserAppUsages.reduce((acc, curr) => {
+    const userAppId = curr[0] as number;
+    const updatedAt = curr[1] as Date;
+
+    // If the userAppId isn't in the accumulator or the existing date is older, update it
+    if (!acc[userAppId] || isBefore(acc[userAppId], updatedAt)) {
+      acc[userAppId] = updatedAt;
     }
+
+    return acc;
+  }, {} as Record<number, Date>);
+
+  const latestUsages = Object.entries(latestUserAppUsages).map(
+    ([userAppId, updatedAt]) => [parseInt(userAppId), updatedAt]
   );
 
-  const longestUnusedUserEnphaseAppId = longestUnusedUserEnphaseApp[0];
+  const longestUnusedApp = latestUsages.reduce((oldest, current) => {
+    if (isBefore(current[1], oldest[1])) {
+      return current;
+    }
+    return oldest;
+  });
+
+  const longestUnusedUserEnphaseAppId = longestUnusedApp[0];
+  console.log(
+    "Returning longest unused enphase app:" + longestUnusedUserEnphaseAppId
+  );
 
   return activeUserApps.find(
     (authorizedApp: ExtendedUserEnphaseApp) =>
@@ -185,9 +276,15 @@ const verifyAuthTokensAndRefreshIfNeeded = async (
 };
 
 const getEnphaseData = async <EnphaseDataType>(
+  getEnphaseDataFunction: (
+    accessToken: string,
+    solarSystemId: number,
+    apiKey: string,
+    dayToFetchDate?: Date
+  ) => Promise<EnphaseDataType>,
   enphaseApp: ExtendedUserEnphaseApp,
   solarSystemId: number,
-  requestKind: EnphaseRequestKind
+  dayToFetchDate?: Date
 ): Promise<EnphaseDataType> => {
   await verifyAuthTokensAndRefreshIfNeeded(enphaseApp);
   const freshEnphaseApp = await enphaseAuthRepository.queryEnphaseAppById(
@@ -203,42 +300,45 @@ const getEnphaseData = async <EnphaseDataType>(
   if (!accessToken || !solarSystemId || !apiKey)
     throw "Essential data of enphase app missing..";
 
-  if (requestKind === ("production" as EnphaseRequestKind)) {
-    data = await enphaseEnergyClient.requestProductionData(
-      accessToken,
-      solarSystemId,
-      apiKey
-    );
-  } else if (requestKind === ("consumption" as EnphaseRequestKind)) {
-    data = await enphaseEnergyClient.requestConsumptionData(
-      accessToken,
-      solarSystemId,
-      apiKey
-    );
-  } else {
-    throw new Error("Invalid enphase app.");
-  }
+  data = await getEnphaseDataFunction(
+    accessToken,
+    solarSystemId,
+    apiKey,
+    dayToFetchDate
+  );
+
+  await enphaseService.logEnphaseApiRequest(
+    freshEnphaseApp,
+    getEnphaseDataFunction.name
+  );
   console.log(`App ${freshEnphaseApp?.app.name} made a request.`);
   return data as EnphaseDataType;
 };
 
+/**
+ * Merges production and consumption data into comprehensive energy data.
+ * Consumption data is the base, production data is merged into it, since production data can be longer than consumption data.
+ * @param productionIntervals
+ * @param consumptionIntervals
+ * @returns energy data
+ */
 const mergeProductionAndConsumptionData = (
   productionIntervals: ProductionInterval[],
   consumptionIntervals: ConsumptionInterval[]
 ): EnergyInterval[] => {
-  return productionIntervals.map((productionInterval) => {
-    const consumptionInterval = consumptionIntervals.find(
-      (it) => it.end_at === productionInterval.end_at
+  return consumptionIntervals.map((consumptionInterval) => {
+    const productionInterval = productionIntervals.find(
+      (it) => it.end_at === consumptionInterval.end_at
     );
     return {
-      end_at: productionInterval.end_at,
-      production: productionInterval.wh_del,
-      consumption: consumptionInterval?.enwh ?? 0,
+      end_at: consumptionInterval.end_at,
+      production: productionInterval?.wh_del ?? 0,
+      consumption: consumptionInterval.enwh,
     };
   });
 };
 
-const getEnergyData = async (userId: number, startAt: Date, endAt: Date) => {
+const getEnergyData = async (userId: number, startAt?: Date, endAt?: Date) => {
   const selectedFields = {
     id: true,
     userId: false,
@@ -250,6 +350,13 @@ const getEnergyData = async (userId: number, startAt: Date, endAt: Date) => {
     createdAt: false,
     updatedAt: false,
   };
+
+  if (!startAt || !endAt) {
+    const energyData = await enphaseEnergyRepository.queryEnergyDataByUserId(
+      userId
+    );
+    return energyData;
+  }
 
   const energyData =
     await enphaseEnergyRepository.queryEnergyDataByUserIdAndDateInterval(
@@ -263,6 +370,7 @@ const getEnergyData = async (userId: number, startAt: Date, endAt: Date) => {
 
 const enphaseEnergyService = {
   updateEnergyDataJob,
+  verifyEnergyDataConsistencyJob,
   getEnergyData,
 };
 

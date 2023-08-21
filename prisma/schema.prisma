@@ -13,73 +13,86 @@ datasource db {
 // TODO: implement UUIDs
 
 model User {
-  id            Int         @id @default(autoincrement())
-  email         String      @unique
-  name          String?
-  roles         UserRole[]
-  password      String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  refreshTokens RefreshToken[]
-  enphaseApps   UserEnphaseApp[]
-  energyData    EnergyData[]
+  id                Int         @id @default(autoincrement())
+  email             String      @unique
+  name              String?
+  roles             UserRole[]
+  password          String
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  refreshTokens     RefreshToken[]
+  enphaseApps       UserEnphaseApp[]
+  energyData        EnergyData[]
+  enphaseRequests   EnphaseApiRequests[]
 }
 
 model UserRole {
-  id            Int         @id @default(autoincrement())
-  userId        Int
-  role          Role
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                Int         @id @default(autoincrement())
+  userId            Int
+  role              Role
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model RefreshToken {
-  id            Int         @id @default(autoincrement())
-  token         String      @unique
-  userId        Int
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  user          User        @relation(fields: [userId], references: [id])
+  id                Int         @id @default(autoincrement())
+  token             String      @unique
+  userId            Int
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  user              User        @relation(fields: [userId], references: [id])
 }
 
 model EnphaseApp {
-  id            Int         @id @default(autoincrement())
-  name          String      @unique
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id                Int         @id @default(autoincrement())
+  name              String      @unique
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
   userEnphaseApps   UserEnphaseApp[]
 }
 
 model UserEnphaseApp {
-  id            Int         @id @default(autoincrement())
-  userId        Int      
-  appId         Int
-  accessToken   String
-  refreshToken  String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  user          User        @relation(fields: [userId], references: [id])
-  app           EnphaseApp  @relation(fields: [appId], references: [id])
-  energyData    EnergyData[]
+  id                Int         @id @default(autoincrement())
+  userId            Int      
+  appId             Int
+  accessToken       String
+  refreshToken      String
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  user              User        @relation(fields: [userId], references: [id])
+  app               EnphaseApp  @relation(fields: [appId], references: [id])
+  energyData        EnergyData[]
+  enphaseRequests   EnphaseApiRequests[]
 
   @@unique([userId, appId])
 }
 
 model EnergyData {
-  id            Int         @id @default(autoincrement())
-  userId        Int
-  userAppId     Int
-  systemId      String
-  endDate       DateTime
-  production    Float
-  consumption   Float
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  user          User        @relation(fields: [userId], references: [id])
-  userApp       UserEnphaseApp  @relation(fields: [userAppId], references: [id])
+  id                Int         @id @default(autoincrement())
+  userId            Int
+  userAppId         Int
+  systemId          String
+  endDate           DateTime
+  production        Float
+  consumption       Float
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  user              User        @relation(fields: [userId], references: [id])
+  userApp           UserEnphaseApp  @relation(fields: [userAppId], references: [id])
 
   @@unique([userId, endDate])
+}
+
+model EnphaseApiRequests {
+  id                Int         @id @default(autoincrement())
+  userId            Int
+  userAppId         Int
+  endpoint          String
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  user              User        @relation(fields: [userId], references: [id])
+  userApp           UserEnphaseApp  @relation(fields: [userAppId], references: [id])
 }
 
 enum Role {

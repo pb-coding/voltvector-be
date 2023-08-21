@@ -19,6 +19,9 @@ const queryEnergyDataByUserId = async (userId: number) => {
       createdAt: true,
       updatedAt: true,
     },
+    orderBy: {
+      endDate: "asc",
+    },
   });
   return energyData;
 };

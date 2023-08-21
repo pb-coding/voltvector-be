@@ -12,24 +12,32 @@ const handleEnphaseEnergyGetRequest = asyncHandler(
     let decodedId = req.id;
 
     validateRequestParams(
-      [
-        { name: "startAt", param: startAt, expectedType: "date" },
-        { name: "endAt", param: endAt, expectedType: "date" },
-        { name: "decoded user id", param: decodedId, expectedType: "numeric" },
-      ],
+      [{ name: "decoded user id", param: decodedId, expectedType: "numeric" }],
       res
     );
-
-    const startAtDate = new Date(startAt as string);
-    const endAtDate = new Date(endAt as string);
     const userId = decodedId as number;
 
-    const enphaseEnergy = await enphaseEnergyService.getEnergyData(
-      userId,
-      startAtDate,
-      endAtDate
-    );
-    res.json(enphaseEnergy);
+    if (startAt && endAt) {
+      validateRequestParams(
+        [
+          { name: "startAt", param: startAt, expectedType: "date" },
+          { name: "endAt", param: endAt, expectedType: "date" },
+        ],
+        res
+      );
+      const startAtDate = new Date(startAt as string);
+      const endAtDate = new Date(endAt as string);
+
+      const selectedEnergyData = await enphaseEnergyService.getEnergyData(
+        userId,
+        startAtDate,
+        endAtDate
+      );
+      res.json(selectedEnergyData);
+    } else {
+      const allEnergyData = await enphaseEnergyService.getEnergyData(userId);
+      res.json(allEnergyData);
+    }
   }
 );
 
@@ -40,9 +48,25 @@ const triggerUpdateEnergyDataJob = asyncHandler(
   }
 );
 
+const triggerDataVerificationJob = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    // TODO: implement check for specific users: let userIdsParam = req.query.userIds;
+    let readOnlyParam = req.query.readOnly;
+
+    let readOnly = false;
+    if (readOnlyParam && readOnlyParam === "true") {
+      readOnly = true;
+    }
+
+    res.status(202).json({ message: "Job trigger accepted" });
+    enphaseEnergyService.verifyEnergyDataConsistencyJob(null, readOnly);
+  }
+);
+
 const enphaseEnergyController = {
   handleEnphaseEnergyGetRequest,
   triggerUpdateEnergyDataJob,
+  triggerDataVerificationJob,
 };
 
 export default enphaseEnergyController;
