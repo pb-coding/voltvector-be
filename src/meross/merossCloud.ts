@@ -100,17 +100,7 @@ export type DeviceInitializedCallback = (
   device: MerossCloudDevice
 ) => void;
 
-// export class MerossCloud extends EventEmitter {
-// on(name: DeviceInitializedEvent, handler: DeviceInitializedCallback): this
-
-// export class MerossCloudDevice extends EventEmitter {
-
-/**
- * @deprecated
- */
-// disconnect(force: boolean): void
-
-const SECRET = "23x17ahWarFH6w29";
+const SECRET = process.env.MEROSS_SECRET ?? "setSecretInEnv";
 const MEROSS_URL = "https://iot.meross.com";
 const LOGIN_URL = `${MEROSS_URL}/v1/Auth/Login`;
 const LOGOUT_URL = `${MEROSS_URL}/v1/Profile/logout`;
