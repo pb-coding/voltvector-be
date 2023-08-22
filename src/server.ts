@@ -19,10 +19,6 @@ import userRouter from "./routes/user";
 // Initialize cron jobs
 import "./enphase/energy/enphaseEnergyJobs";
 
-// Initialite Meross devices
-import { registerMerossEvents } from "./meross/merossEventHandlers";
-registerMerossEvents();
-
 const PORT = process.env.PORT || 3001;
 
 app.use(logger);

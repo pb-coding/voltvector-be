@@ -1,3 +1,6 @@
+// thanks to https://github.com/Apollon77/meross-cloud
+// TODO: cleanup and type!
+
 "use strict";
 
 import * as mqtt from "mqtt";
@@ -100,6 +103,48 @@ export type DeviceInitializedCallback = (
   device: MerossCloudDevice
 ) => void;
 
+export type MerossDeviceInfoType = {
+  all: {
+    system: {
+      hardware: {
+        type: string;
+        subType: string;
+        version: string;
+        chipType: string;
+        uuid: string;
+        macAddress: string;
+      };
+      firmware: {
+        version: string;
+        compileTime: string;
+        encrypt: number;
+        wifiMac: string;
+        innerIp: string;
+        server: string;
+        port: number;
+        userId: number;
+      };
+      time: {
+        timestamp: number;
+        timezone: string;
+        timeRule: Array<[number, number, number]>;
+      };
+      online: {
+        status: number;
+        bindId: string;
+        who: number;
+      };
+    };
+    digest: {
+      togglex: Array<{
+        channel: number;
+        onoff: number;
+        lmTime: number;
+      }>;
+    };
+  };
+};
+
 const SECRET = process.env.MEROSS_SECRET ?? "setSecretInEnv";
 const MEROSS_URL = "https://iot.meross.com";
 const LOGIN_URL = `${MEROSS_URL}/v1/Auth/Login`;
@@ -121,6 +166,10 @@ function encodeParams(parameters: any) {
   return Buffer.from(jsonstring).toString("base64");
 }
 
+type MerossDeviceListType = {
+  [key: string]: MerossCloudDevice;
+};
+
 export class MerossCloud extends EventEmitter {
   options: CloudOptions;
   token: any;
@@ -132,7 +181,7 @@ export class MerossCloud extends EventEmitter {
   onlyLocalForGet: boolean;
   timeout: number;
   mqttConnections: any;
-  devices: any;
+  devices: MerossDeviceListType;
   clientResponseTopic: any;
   /*
         email
@@ -374,10 +423,14 @@ export class MerossCloud extends EventEmitter {
     return this.devices[uuid];
   }
 
+  getAllDevices(): MerossDeviceListType {
+    return this.devices;
+  }
+
   disconnectAll(force: boolean): void {
     for (const deviceId in this.devices) {
       if (!this.devices.hasOwnProperty(deviceId)) continue;
-      this.devices[deviceId].disconnect(force);
+      this.devices[deviceId].disconnect(); // removed "force" parameter
     }
     for (const domain of Object.keys(this.mqttConnections)) {
       this.mqttConnections[domain].client.end(force);
@@ -633,10 +686,10 @@ export class MerossCloud extends EventEmitter {
   }
 }
 
-class MerossCloudDevice extends EventEmitter {
+export class MerossCloudDevice extends EventEmitter {
   clientResponseTopic: any;
   waitingMessageIds: any;
-  dev: any;
+  dev: DeviceDefinition;
   cloudInst: any;
   deviceConnected: boolean;
   knownLocalIp: any;

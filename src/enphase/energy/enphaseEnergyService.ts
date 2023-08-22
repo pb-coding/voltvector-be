@@ -25,7 +25,7 @@ import {
   ProductionInterval,
 } from "./enphaseEnergyTypes";
 
-const userIdsToUpdate = [1]; // For now we fetch data only for the admin user TODO: fetch all users from db
+const userIdsToUpdate = [Number(process.env.ADMIN_USER_ID) ?? 2]; // For now we fetch data only for the admin user TODO: fetch all users from db
 const solarSystemId = 3447361; // TODO: get solarSystemId from db
 
 /**

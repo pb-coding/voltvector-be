@@ -14,33 +14,91 @@ const handleGetDevicesRequest = asyncHandler(
       res
     );
 
-    let devices = merossService.getDevicesByUserId(decodedId as number);
-    console.log(`devices: ${devices}`);
+    let devices = await merossService.getDevicesByUserId(decodedId as number);
     res.json(devices);
   }
 );
 
-const handleGetDeviceByIdRequest = asyncHandler(
+const handleGetDeviceRequest = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     let decodedId = req.id;
-    let deviceId = req.params.id;
+    let deviceId = req.params.deviceId;
 
     validateRequestParams(
       [
         { name: "decoded user id", param: decodedId, expectedType: "numeric" },
-        { name: "provided user id", param: deviceId, expectedType: "numeric" },
+        { name: "device id", param: deviceId, expectedType: "string" },
       ],
       res
     );
 
-    let device = merossService.getDeviceByUserAndDeviceId(decodedId as number);
-    console.log(`device: ${deviceId}`);
-    res.json(devices);
+    const device = await merossService.getDeviceByUserAndDeviceId(
+      decodedId as number,
+      deviceId as string
+    );
+
+    if (!device) {
+      res.status(404).json("Device not found");
+      return;
+    }
+
+    const successWithInfo = await merossService.getDeviceInfo(device);
+    if (!successWithInfo) {
+      res.status(500).json("Getting device info failed");
+      return;
+    }
+    res.json(successWithInfo);
+  }
+);
+
+const handlePutDeviceRequest = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    let decodedId = req.id;
+    let deviceId = req.params.deviceId;
+    let setValue = req.body.set;
+
+    validateRequestParams(
+      [
+        { name: "decoded user id", param: decodedId, expectedType: "numeric" },
+        { name: "device id", param: deviceId, expectedType: "string" },
+      ],
+      res
+    );
+
+    // const deviceId = "2205069445274951080148e1e991c9f0";
+
+    const device = await merossService.getDeviceByUserAndDeviceId(
+      decodedId as number,
+      deviceId as string
+    );
+
+    console.log("device: ", device.dev.devName);
+
+    if (!device) {
+      res.status(404).json("Device not found");
+      return;
+    }
+
+    if (setValue !== "on" && setValue !== "off") {
+      res.status(400).json("Invalid set value");
+      return;
+    }
+
+    const desiredDeviceState = setValue === "on" ? true : false;
+
+    const success = await merossService.toggleDevice(
+      device,
+      desiredDeviceState
+    );
+    if (!success) res.status(500).json("Toggling device failed");
+    else res.json(`Setting device ${deviceId} to ${setValue} was successful`);
   }
 );
 
 const merossController = {
   handleGetDevicesRequest,
+  handlePutDeviceRequest,
+  handleGetDeviceRequest,
 };
 
 export default merossController;

@@ -12,4 +12,16 @@ merossRouter.get(
   merossController.handleGetDevicesRequest
 );
 
+merossRouter.get(
+  "/device/:deviceId",
+  authorize([Role.USER]),
+  merossController.handleGetDeviceRequest
+);
+
+merossRouter.put(
+  "/device/:deviceId",
+  authorize([Role.USER]),
+  merossController.handlePutDeviceRequest
+);
+
 export default merossRouter;
