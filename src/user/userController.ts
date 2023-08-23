@@ -35,9 +35,6 @@ export const handleUserByIdRequest = async (
   const providedUserId = Number(providedId);
   const decodedUserId = decodedId as number;
 
-  console.log(`providedUserId: ${providedUserId}`);
-  console.log(`decodedUserId: ${decodedUserId}`);
-
   if (
     !isAdmin(roles) &&
     providedUserId !== 0 &&
@@ -109,9 +106,6 @@ export const handleUpdateUserRequest = asyncHandler(
     const providedUserId = Number(providedId);
     const decodedUserId = decodedId as number;
 
-    console.log(`providedUserId: ${providedUserId}`);
-    console.log(`decodedUserId: ${decodedUserId}`);
-
     if (
       !isAdmin(roles) &&
       providedUserId !== 0 &&
@@ -138,12 +132,7 @@ export const handleUpdateUserRequest = asyncHandler(
 
 export const handleDeleteUserRequest = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    console.log(req.body);
     const userIds = req.body.userIds as number[];
-
-    userIds.forEach((id) => {
-      console.log(`id: ${id}`);
-    });
 
     // TODO: add validation for multiple ids
     validateRequestParams(
@@ -156,54 +145,9 @@ export const handleDeleteUserRequest = asyncHandler(
       ],
       res
     );
-    userIds.forEach((id) => {
-      console.log(`id: ${id}`);
-    });
 
     const deletedUsers = await userService.deleteUsers(userIds);
     res.json(deletedUsers);
-  }
-);
-
-export const handleUserInfoRequest = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    let userId = req.id;
-    console.log(`userId: ${userId}`);
-
-    console.log("validating request params");
-
-    validateRequestParams(
-      [
-        {
-          name: "user id",
-          param: userId,
-          expectedType: "numeric",
-        },
-      ],
-      res
-    );
-
-    console.log("successfull validation");
-
-    userId = userId as number;
-
-    // Query the user information using userId
-    /* const user = await userService.queryUserById(userId);
-
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
-
-    // Build the response object with the required user information
-    const userAuthData = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      // Add any other necessary user information
-    };
-
-    res.json(userAuthData);*/
-    res.send("success");
   }
 );
 
@@ -213,7 +157,6 @@ export const userController = {
   handleCreateUserRequest,
   handleUpdateUserRequest,
   handleDeleteUserRequest,
-  handleUserInfoRequest,
 };
 
 export default userController;

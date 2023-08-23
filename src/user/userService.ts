@@ -33,7 +33,6 @@ const queryUserById = async (id: number) => {
       password: false,
     },
   });
-  console.log(user);
   return user;
 };
 
@@ -48,7 +47,6 @@ const queryUserByEmail = async (email: string) => {
       email: email,
     },
   });
-  console.log(user);
   return user;
 };
 
@@ -69,7 +67,7 @@ const createUser = async (user: CreateUserRequest) => {
       roles: true,
     },
   });
-  console.log(`Created User in Database: ${newUser}`);
+  console.log(`Created User in Database wit id: ${newUser.id}`);
   return newUser;
 };
 
@@ -98,7 +96,7 @@ const updateUser = async (id: number, user: UpdateUserRequest) => {
       password: false,
     },
   });
-  console.log(`Updated User in Database: ${updatedUser}`);
+  console.log(`Updated User in Database with id: ${updatedUser.id}`);
   return updatedUser;
 };
 

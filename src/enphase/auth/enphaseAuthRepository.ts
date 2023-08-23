@@ -34,12 +34,10 @@ const saveEnphaseAuthTokens = async (
     },
   });
 
-  console.log(`Saved enphaseAuthTokens: ${userEnphaseApp}`);
   return userEnphaseApp;
 };
 
 const querySavedEnphaseAppsByUserId = async (userId: number) => {
-  console.log(`Querying saved enphase apps for user ${userId}`);
   const userEnphaseApps = await prisma.userEnphaseApp.findMany({
     where: {
       userId: userId,

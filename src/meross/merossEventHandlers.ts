@@ -1,8 +1,6 @@
 import { MerossCloud } from "../lib/meross/merossCloud";
-import {
-  MerossCloudDevice as MerossCloudDeviceType,
-  DeviceDefinition as DeviceDefinitionType,
-} from "../lib/meross/merossCloud";
+import { MerossCloudDevice } from "../lib/meross/merossCloudDevice";
+import { DeviceDefinitionType } from "../lib/meross/types";
 
 type MerossConnectionCacheType = {
   [key: number]: MerossCloud;
@@ -12,7 +10,7 @@ let merossConnectionCache: MerossConnectionCacheType = {};
 
 const getUserMerossCredentials = (userId: number) => {
   // TODO: get credentials from DB
-  console.log("getUserMerossCredentials: " + userId);
+
   return {
     email: process.env.MEROSS_EMAIL ?? "setEmailInEnv",
     password: process.env.MEROSS_PASSWORD ?? "setPasswordInEnv",
@@ -47,36 +45,41 @@ export const initializeMerossConnectionForUser = (
         (
           deviceId: string,
           deviceDef: DeviceDefinitionType,
-          device: MerossCloudDeviceType
+          device: MerossCloudDevice
         ) => {
           console.log(
-            "New device " + deviceId + ": " + JSON.stringify(deviceDef)
+            `Meross: (userId: ${userId}): New device ${deviceId} initialized`
           );
 
           device.on("connected", () => {
-            console.log("DEV: " + deviceId + " connected");
+            console.log(
+              `Meross: (userId: ${userId}): DEV: ${deviceId} connected`
+            );
           });
 
           device.on("close", (error: any) => {
-            console.log("DEV: " + deviceId + " closed: " + error);
+            console.log(
+              `Meross: (userId: ${userId}): DEV: ${deviceId} closed:  ${error}`
+            );
           });
 
           device.on("error", (error: any) => {
-            console.log("DEV: " + deviceId + " error: " + error);
+            console.log(
+              `Meross: (userId: ${userId}): DEV: ${deviceId} closed:  ${error}`
+            );
           });
 
           device.on("reconnect", () => {
-            console.log("DEV: " + deviceId + " reconnected");
+            console.log(
+              `Meross: (userId: ${userId}): DEV: ${deviceId} reconnected`
+            );
           });
 
           device.on("data", (namespace: any, payload: any) => {
             console.log(
-              "DEV: " +
-                deviceId +
-                " " +
-                namespace +
-                " - data: " +
-                JSON.stringify(payload)
+              `Meross: (userId: ${userId}): DEV: ${deviceId} ${namespace} - data: ${JSON.stringify(
+                payload
+              )}`
             );
           });
         }
@@ -176,7 +179,9 @@ export const clearCacheForUser = (userId: number) => {
   if (!merossConnection) {
     return;
   }
-  merossConnection.logout(console.log("Meross logout"));
+  merossConnection.logout(
+    console.log(`Meross (userId: ${userId}) logging out.`)
+  );
   merossConnection.removeAllListeners();
   delete merossConnectionCache[userId];
 };

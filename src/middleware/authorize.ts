@@ -15,7 +15,6 @@ const authorize = (requiredRoles: RoleType[]) => {
     next: NextFunction
   ) {
     const authHeader = req.headers["authorization"];
-    console.log(`Auth Header: ${authHeader}`);
     if (!authHeader?.startsWith("Bearer ")) return res.sendStatus(401);
 
     const token = authHeader.split(" ")[1];
@@ -33,7 +32,6 @@ const authorize = (requiredRoles: RoleType[]) => {
         req.id = payload.user.id;
         req.roles = payload.user.roles;
 
-        console.log(`user is authorized: ${isAuthorized}`);
         if (!isAuthorized) return res.sendStatus(403);
         next();
       }

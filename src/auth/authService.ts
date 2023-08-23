@@ -12,7 +12,6 @@ const saveRefreshToken = async (
       token: refreshToken,
     },
   });
-  console.log(`Created Refresh Token in Database: ${newRefreshToken}`);
   return newRefreshToken;
 };
 
@@ -28,7 +27,6 @@ const queryUserByRefreshToken = async (
     },
   });
   const user = refreshTokenWithUser?.user;
-  console.log(user);
   return user;
 };
 
@@ -38,7 +36,6 @@ const deleteRefreshToken = async (refreshToken: string) => {
       token: refreshToken,
     },
   });
-  console.log(`Deleted Refresh Token in Database: ${deletedRefreshToken}`);
   return deletedRefreshToken;
 };
 
@@ -57,7 +54,6 @@ const queryRolesByUserId = async (id: number): Promise<RoleType[]> => {
     userRoles.push(roleObject.role)
   );
 
-  console.log(userRoles);
   return userRoles;
 };
 

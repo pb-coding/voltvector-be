@@ -5,9 +5,6 @@ const saveEnphaseApiRequest = async (
   userId: number,
   endpoint: string
 ) => {
-  console.log(
-    "saveEnphaseApiRequest" + endpoint + " " + userId + " " + userAppId
-  );
   const savedEnphaseApiRequest = await prisma.enphaseApiRequests.create({
     data: {
       userAppId,

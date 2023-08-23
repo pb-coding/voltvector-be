@@ -42,12 +42,28 @@ const handleGetDeviceRequest = asyncHandler(
       return;
     }
 
-    const successWithInfo = await merossService.getDeviceInfo(device);
-    if (!successWithInfo) {
+    const deviceInfo = await merossService.getDeviceInfo(device);
+    if (!deviceInfo) {
       res.status(500).json("Getting device info failed");
       return;
     }
-    res.json(successWithInfo);
+
+    const devicePowerHistory = await merossService.getDevicePowerHistory(
+      device
+    );
+
+    const deviceElectricity = await merossService.getDeviceElectricity(device);
+
+    // TODO: consider devices with multiple toggle states
+    const deviceInfoOverview = {
+      id: deviceInfo.all.system.hardware.uuid,
+      onlineStatus: deviceInfo.all.system.online.status,
+      deviceType: deviceInfo.all.system.hardware.type,
+      toggleStatus: deviceInfo.all.digest.togglex[0].onoff,
+      powerHistory: devicePowerHistory,
+      electricity: deviceElectricity,
+    };
+    res.json(deviceInfoOverview);
   }
 );
 
@@ -71,8 +87,6 @@ const handlePutDeviceRequest = asyncHandler(
       decodedId as number,
       deviceId as string
     );
-
-    console.log("device: ", device.dev.devName);
 
     if (!device) {
       res.status(404).json("Device not found");

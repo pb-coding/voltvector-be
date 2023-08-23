@@ -1,4 +1,5 @@
-// thanks to https://github.com/Apollon77/meross-cloud
+// thanks to https://github.com/Apollon77/meross-cloud for the meross cloud implementation
+// thanks to https://github.com/arandall/meross/blob/main/doc/protocol.md for the protocol documentation
 // TODO: cleanup and type!
 
 "use strict";
@@ -8,142 +9,22 @@ import * as crypto from "crypto";
 import request from "request";
 import EventEmitter from "events";
 import { v4 as uuidv4 } from "uuid";
+
 import { getErrorMessage } from "./errorMessages";
-
-export interface DeviceDefinition {
-  uuid: string;
-  onlineStatus: number;
-  devName: string;
-  devIconId: string;
-  bindTime: number;
-  deviceType: string;
-  subType: string;
-  channels: any[];
-  region: string;
-  fmwareVersion: string;
-  hdwareVersion: string;
-  userDevIcon: string;
-  iconType: number;
-  skillNumber: string;
-  domain: string;
-  reservedDomain: string;
-}
-
-export interface GetControlPowerConsumptionXResponse {
-  consumptionx: {
-    date: string;
-    /**
-     * timestamp, utc.
-     * has to be multiplied by 1000 to use on new Date(time)
-     */
-    time: number;
-    value: number;
-  }[];
-}
-export interface GetControlElectricityResponse {
-  electricity: {
-    channel: number;
-    /**
-     * current in decimilliAmp. Has to get divided by 10000 to get Amp(s)
-     */
-    current: number;
-    /**
-     * voltage in deciVolt. Has to get divided by 10 to get Volt(s)
-     */
-    voltage: number;
-    /**
-     * power in milliWatt. Has to get divided by 1000 to get Watt(s)
-     */
-    power: number;
-    config: {
-      voltageRatio: number;
-      electricityRatio: number;
-    };
-  };
-}
-
-export interface CloudOptions {
-  email: string;
-  password: string;
-  logger?: Function;
-  localHttpFirst?: boolean;
-  onlyLocalForGet?: boolean;
-  timeout?: number;
-}
-
-export interface LightData {
-  uuid: string;
-  channel: number;
-  capacity: number;
-  gradual: number;
-  rgb?: number;
-  temperature?: number;
-  luminance?: number;
-}
-
-export interface ThermostatModeData {
-  channel: number;
-  heatTemp?: number;
-  coolTemp?: number;
-  manualTemp?: number;
-  ecoTemp?: number;
-  targetTemp?: number;
-  mode?: number;
-  onoff?: number;
-}
-
-export type MessageId = string;
-export type Callback<T> = (error: Error | null, data: T) => void;
-export type ErrorCallback = (error: Error | null) => void;
-export type DeviceInitializedEvent = "deviceInitialized";
-
-export type DeviceInitializedCallback = (
-  deviceId: string,
-  deviceDef: DeviceDefinition,
-  device: MerossCloudDevice
-) => void;
-
-export type MerossDeviceInfoType = {
-  all: {
-    system: {
-      hardware: {
-        type: string;
-        subType: string;
-        version: string;
-        chipType: string;
-        uuid: string;
-        macAddress: string;
-      };
-      firmware: {
-        version: string;
-        compileTime: string;
-        encrypt: number;
-        wifiMac: string;
-        innerIp: string;
-        server: string;
-        port: number;
-        userId: number;
-      };
-      time: {
-        timestamp: number;
-        timezone: string;
-        timeRule: Array<[number, number, number]>;
-      };
-      online: {
-        status: number;
-        bindId: string;
-        who: number;
-      };
-    };
-    digest: {
-      togglex: Array<{
-        channel: number;
-        onoff: number;
-        lmTime: number;
-      }>;
-    };
-  };
-};
+import { MerossCloudDevice } from "./merossCloudDevice";
+import { MerossCloudHubDevice } from "./merossCloudHubDevice";
+import {
+  ParameterObject,
+  LoginParameters,
+  LoginResponse,
+  CloudOptions,
+  MqttConnectionsType,
+  MerossDeviceListType,
+  CallbackOptionalData,
+  Callback,
+  DeviceDefinitionType,
+  DeviceList,
+} from "./types";
 
 const SECRET = process.env.MEROSS_SECRET ?? "setSecretInEnv";
 const MEROSS_URL = "https://iot.meross.com";
@@ -152,7 +33,7 @@ const LOGOUT_URL = `${MEROSS_URL}/v1/Profile/logout`;
 const DEV_LIST = `${MEROSS_URL}/v1/Device/devList`;
 const SUBDEV_LIST = `${MEROSS_URL}/v1/Hub/getSubDevices`;
 
-function generateRandomString(length: any) {
+function generateRandomString(length: number) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   let nonce = "";
   while (nonce.length < length) {
@@ -161,28 +42,24 @@ function generateRandomString(length: any) {
   return nonce;
 }
 
-function encodeParams(parameters: any) {
+function encodeParams(parameters: ParameterObject) {
   const jsonstring = JSON.stringify(parameters);
   return Buffer.from(jsonstring).toString("base64");
 }
 
-type MerossDeviceListType = {
-  [key: string]: MerossCloudDevice;
-};
-
 export class MerossCloud extends EventEmitter {
   options: CloudOptions;
-  token: any;
-  key: any;
-  userId: any;
-  userEmail: any;
+  token: string | null;
+  key: string | null;
+  userId: string | null;
+  userEmail: string | null;
   authenticated: boolean;
   localHttpFirst: boolean;
   onlyLocalForGet: boolean;
   timeout: number;
-  mqttConnections: any;
+  mqttConnections: MqttConnectionsType;
   devices: MerossDeviceListType;
-  clientResponseTopic: any;
+  clientResponseTopic: string | null;
   /*
         email
         password
@@ -212,7 +89,11 @@ export class MerossCloud extends EventEmitter {
     this.clientResponseTopic = null;
   }
 
-  authenticatedPost(url: string, paramsData: any, callback: any) {
+  authenticatedPost(
+    url: string,
+    paramsData: ParameterObject,
+    callback: CallbackOptionalData<any>
+  ) {
     const nonce = generateRandomString(16);
     const timestampMillis = Date.now();
     const loginParams = encodeParams(paramsData);
@@ -279,7 +160,10 @@ export class MerossCloud extends EventEmitter {
     });
   }
 
-  connectDevice(deviceObj: any, dev: any) {
+  connectDevice(
+    deviceObj: MerossCloudDevice | MerossCloudHubDevice,
+    dev: DeviceDefinitionType
+  ) {
     const deviceId = dev.uuid;
     this.devices[deviceId] = deviceObj;
     this.devices[deviceId].on("connected", () => {
@@ -307,7 +191,6 @@ export class MerossCloud extends EventEmitter {
     this.devices[deviceId].connect();
   }
 
-  // TODO: Callback<number> or Errorcallback?
   connect(callback: Callback<number>): void {
     if (!this.options.email) {
       return callback && callback(new Error("Email missing"), 0);
@@ -329,62 +212,69 @@ export class MerossCloud extends EventEmitter {
         uuid: logIdentifier,
         carrier: "",
       },
-    };
+    } satisfies LoginParameters;
     //console.log(JSON.stringify(data));
 
-    this.authenticatedPost(LOGIN_URL, data, (err: any, loginResponse: any) => {
-      //console.log(loginResponse);
-      if (err) {
-        callback && callback(err, 0);
-        return;
-      }
-      if (!loginResponse) {
-        callback &&
-          callback(new Error("No valid Login Response data received"), 0);
-        return;
-      }
-      this.token = loginResponse.token;
-      this.key = loginResponse.key;
-      this.userId = loginResponse.userid;
-      this.userEmail = loginResponse.email;
-      this.authenticated = true;
-
-      this.authenticatedPost(DEV_LIST, {}, (err: any, deviceList: any) => {
-        //console.log(JSON.stringify(deviceList, null, 2));
-
-        let initCounter = 0;
-        let deviceListLength = 0;
-        if (deviceList && Array.isArray(deviceList)) {
-          deviceListLength = deviceList.length;
-          deviceList.forEach((dev) => {
-            //const deviceType = dev.deviceType;
-            if (dev.deviceType.startsWith("msh300")) {
-              this.options.logger &&
-                this.options.logger(`${dev.uuid} Detected Hub`);
-              this.authenticatedPost(
-                SUBDEV_LIST,
-                { uuid: dev.uuid },
-                (err: any, subDeviceList: any) => {
-                  this.connectDevice(
-                    new MerossCloudHubDevice(this, dev, subDeviceList),
-                    dev
-                  );
-                  initCounter++;
-                  if (initCounter === deviceListLength)
-                    callback && callback(null, deviceListLength);
-                }
-              );
-            } else {
-              this.connectDevice(new MerossCloudDevice(this, dev), dev);
-              initCounter++;
-            }
-          });
+    this.authenticatedPost(
+      LOGIN_URL,
+      data,
+      (err: any, loginResponse: LoginResponse) => {
+        // console.log(loginResponse);
+        if (err) {
+          callback && callback(err, 0);
+          return;
         }
+        if (!loginResponse) {
+          callback &&
+            callback(new Error("No valid Login Response data received"), 0);
+          return;
+        }
+        this.token = loginResponse.token;
+        this.key = loginResponse.key;
+        this.userId = loginResponse.userid.toString();
+        this.userEmail = loginResponse.email;
+        this.authenticated = true;
 
-        if (initCounter === deviceListLength)
-          callback && callback(null, deviceListLength);
-      });
-    });
+        this.authenticatedPost(
+          DEV_LIST,
+          {},
+          (err: any, deviceList: DeviceList) => {
+            // console.log(JSON.stringify(deviceList, null, 2));
+            let initCounter = 0;
+            let deviceListLength = 0;
+            if (deviceList && Array.isArray(deviceList)) {
+              deviceListLength = deviceList.length;
+              deviceList.forEach((dev) => {
+                //const deviceType = dev.deviceType;
+                if (dev.deviceType.startsWith("msh300")) {
+                  this.options.logger &&
+                    this.options.logger(`${dev.uuid} Detected Hub`);
+                  this.authenticatedPost(
+                    SUBDEV_LIST,
+                    { uuid: dev.uuid },
+                    (err: any, subDeviceList: any) => {
+                      this.connectDevice(
+                        new MerossCloudHubDevice(this, dev, subDeviceList),
+                        dev
+                      );
+                      initCounter++;
+                      if (initCounter === deviceListLength)
+                        callback && callback(null, deviceListLength);
+                    }
+                  );
+                } else {
+                  this.connectDevice(new MerossCloudDevice(this, dev), dev);
+                  initCounter++;
+                }
+              });
+            }
+
+            if (initCounter === deviceListLength)
+              callback && callback(null, deviceListLength);
+          }
+        );
+      }
+    );
 
     /*
         /app/64416/subscribe <-- {"header":{"messageId":"b5da1e168cba7a681afcff82eaf703c8","namespace":"Appliance.System.Online","timestamp":1539614195,"method":"PUSH","sign":"b16c2c4cbb5acf13e6b94990abf5b140","from":"/appliance/1806299596727829081434298f15a991/subscribe","payloadVersion":1},"payload":{"online":{"status":2}}}
@@ -433,11 +323,11 @@ export class MerossCloud extends EventEmitter {
       this.devices[deviceId].disconnect(); // removed "force" parameter
     }
     for (const domain of Object.keys(this.mqttConnections)) {
-      this.mqttConnections[domain].client.end(force);
+      this.mqttConnections[domain]?.client?.end(force);
     }
   }
 
-  initMqtt(dev: any) {
+  initMqtt(dev: DeviceDefinitionType) {
     const domain = dev.domain || "eu-iot.meross.com"; // reservedDomain ???
     if (!this.mqttConnections[domain] || !this.mqttConnections[domain].client) {
       const appId = crypto
@@ -446,6 +336,9 @@ export class MerossCloud extends EventEmitter {
         .digest("hex");
       const clientId = `app:${appId}`;
 
+      if (!this.userId || !this.key) {
+        throw new Error("UserId or Key is missing.");
+      }
       // Password is calculated as the MD5 of USERID concatenated with KEY
       const hashedPassword = crypto
         .createHash("md5")
@@ -453,17 +346,20 @@ export class MerossCloud extends EventEmitter {
         .digest("hex");
 
       if (!this.mqttConnections[domain]) {
-        this.mqttConnections[domain] = {};
+        this.mqttConnections[domain] = {
+          client: null,
+          deviceList: [],
+        };
       }
       if (this.mqttConnections[domain].client) {
-        this.mqttConnections[domain].client.end(true);
+        this.mqttConnections[domain]?.client?.end(true);
       }
       this.mqttConnections[domain].client = mqtt.connect({
         protocol: "mqtts",
         host: domain,
         port: 2001,
         clientId: clientId,
-        username: this.userId,
+        username: this.userId ?? "",
         password: hashedPassword,
         rejectUnauthorized: true,
         keepalive: 30,
@@ -475,10 +371,10 @@ export class MerossCloud extends EventEmitter {
         this.mqttConnections[domain].deviceList.push(dev.uuid);
       }
 
-      this.mqttConnections[domain].client.on("connect", () => {
+      this.mqttConnections[domain]?.client?.on("connect", () => {
         //console.log("Connected. Subscribe to user topics");
 
-        this.mqttConnections[domain].client.subscribe(
+        this.mqttConnections[domain].client?.subscribe(
           `/app/${this.userId}/subscribe`,
           (err: any) => {
             if (err) {
@@ -490,7 +386,7 @@ export class MerossCloud extends EventEmitter {
 
         this.clientResponseTopic = `/app/${this.userId}-${appId}/subscribe`;
 
-        this.mqttConnections[domain].client.subscribe(
+        this.mqttConnections[domain]?.client?.subscribe(
           this.clientResponseTopic,
           (err: any) => {
             if (err) {
@@ -500,7 +396,7 @@ export class MerossCloud extends EventEmitter {
           }
         );
 
-        this.mqttConnections[domain].deviceList.forEach((devId: any) => {
+        this.mqttConnections[domain].deviceList.forEach((devId: string) => {
           this.devices[devId] &&
             this.devices[devId].emit(
               this.mqttConnections[domain].silentReInitialization
@@ -511,42 +407,41 @@ export class MerossCloud extends EventEmitter {
         this.mqttConnections[domain].silentReInitialization = false;
       });
 
-      this.mqttConnections[domain].client.on("error", (error: any) => {
+      this.mqttConnections[domain]?.client?.on("error", (error: any) => {
         if (error && error.toString().includes("Server unavailable")) {
           this.mqttConnections[domain].silentReInitialization = true;
-          this.mqttConnections[domain].client.end(true);
+          this.mqttConnections[domain]?.client?.end(true);
           if (this.mqttConnections[domain].deviceList.length) {
             setImmediate(() => {
               this.mqttConnections[domain].client = null;
               if (this.mqttConnections[domain].deviceList.length) {
                 this.initMqtt(
-                  this.devices[this.mqttConnections[domain].deviceList[0]]
+                  this.devices[this.mqttConnections[domain].deviceList[0]].dev // TODO: check if this is correct - added .dev
                 );
               }
             });
           }
         }
-        this.mqttConnections[domain].deviceList.forEach((devId: any) => {
+        this.mqttConnections[domain].deviceList.forEach((devId: string) => {
           this.devices[devId] &&
             this.devices[devId].emit("error", error ? error.toString() : null);
         });
       });
-      this.mqttConnections[domain].client.on("close", (error: any) => {
+      this.mqttConnections[domain]?.client?.on("close", () => {
         if (this.mqttConnections[domain].silentReInitialization) {
           return;
         }
-        this.mqttConnections[domain].deviceList.forEach((devId: any) => {
-          this.devices[devId] &&
-            this.devices[devId].emit("close", error ? error.toString() : null);
+        this.mqttConnections[domain].deviceList.forEach((devId: string) => {
+          this.devices[devId] && this.devices[devId].emit("close", null);
         });
       });
-      this.mqttConnections[domain].client.on("reconnect", () => {
+      this.mqttConnections[domain]?.client?.on("reconnect", () => {
         this.mqttConnections[domain].deviceList.forEach((devId: any) => {
           this.devices[devId] && this.devices[devId].emit("reconnect");
         });
       });
 
-      this.mqttConnections[domain].client.on(
+      this.mqttConnections[domain]?.client?.on(
         "message",
         (topic: any, message: any) => {
           if (!message) return;
@@ -570,7 +465,7 @@ export class MerossCloud extends EventEmitter {
       if (!this.mqttConnections[domain].deviceList.includes(dev.uuid)) {
         this.mqttConnections[domain].deviceList.push(dev.uuid);
       }
-      if (this.mqttConnections[domain].client.connected) {
+      if (this.mqttConnections[domain]?.client?.connected) {
         setImmediate(() => {
           this.devices[dev.uuid] && this.devices[dev.uuid].emit("connected");
         });
@@ -578,7 +473,7 @@ export class MerossCloud extends EventEmitter {
     }
   }
 
-  sendMessageMqtt(dev: any, data: any) {
+  sendMessageMqtt(dev: DeviceDefinitionType, data: any) {
     if (
       !this.mqttConnections[dev.domain] ||
       !this.mqttConnections[dev.domain].client
@@ -590,7 +485,7 @@ export class MerossCloud extends EventEmitter {
       this.options.logger(
         `MQTT-Cloud-Call ${dev.uuid}: ${JSON.stringify(data)}`
       );
-    this.mqttConnections[dev.domain].client.publish(
+    this.mqttConnections[dev.domain]?.client?.publish(
       `/appliance/${dev.uuid}/subscribe`,
       JSON.stringify(data),
       undefined,
@@ -603,7 +498,12 @@ export class MerossCloud extends EventEmitter {
     return true;
   }
 
-  sendMessageHttp(dev: any, ip: any, payload: any, callback: any) {
+  sendMessageHttp(
+    dev: DeviceDefinitionType,
+    ip: string,
+    payload: any,
+    callback: any
+  ) {
     const options = {
       url: `http://${ip}/config`,
       method: "POST",
@@ -667,7 +567,7 @@ export class MerossCloud extends EventEmitter {
     };
   }
 
-  sendMessage(dev: any, ip: any, data: any, callback: any) {
+  sendMessage(dev: DeviceDefinitionType, ip: string, data: any, callback: any) {
     if (this.localHttpFirst && ip) {
       this.sendMessageHttp(dev, ip, data, (err: any) => {
         let res = !err;
@@ -683,499 +583,5 @@ export class MerossCloud extends EventEmitter {
     } else {
       callback && callback(this.sendMessageMqtt(dev, data));
     }
-  }
-}
-
-export class MerossCloudDevice extends EventEmitter {
-  clientResponseTopic: any;
-  waitingMessageIds: any;
-  dev: DeviceDefinition;
-  cloudInst: any;
-  deviceConnected: boolean;
-  knownLocalIp: any;
-  constructor(cloudInstance: any, dev: any) {
-    super();
-
-    this.clientResponseTopic = null;
-    this.waitingMessageIds = {};
-
-    this.dev = dev;
-    this.cloudInst = cloudInstance;
-
-    this.deviceConnected = false;
-    this.knownLocalIp = null;
-  }
-
-  handleMessage(message: any) {
-    if (!this.deviceConnected) return;
-    if (!message || !message.header) return;
-    if (
-      message &&
-      message.header &&
-      message.header.from &&
-      !message.header.from.includes(this.dev.uuid)
-    )
-      return;
-    // {"header":{"messageId":"14b4951d0627ea904dd8685c480b7b2e","namespace":"Appliance.Control.ToggleX","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539602435,"timestampMs":427,"sign":"f33bb034ac2d5d39289e6fa3dcead081"},"payload":{"togglex":[{"channel":0,"onoff":0,"lmTime":1539602434},{"channel":1,"onoff":0,"lmTime":1539602434},{"channel":2,"onoff":0,"lmTime":1539602434},{"channel":3,"onoff":0,"lmTime":1539602434},{"channel":4,"onoff":0,"lmTime":1539602434}]}}
-
-    // If the message is the RESP for some previous action, process return the control to the "stopped" method.
-    if (this.waitingMessageIds[message.header.messageId]) {
-      if (this.waitingMessageIds[message.header.messageId].timeout) {
-        clearTimeout(this.waitingMessageIds[message.header.messageId].timeout);
-      }
-      this.waitingMessageIds[message.header.messageId].callback(
-        null,
-        message.payload || message
-      );
-      delete this.waitingMessageIds[message.header.messageId];
-    } else if (message.header.method === "PUSH") {
-      // Otherwise process it accordingly
-      const namespace = message.header ? message.header.namespace : "";
-      this.emit("data", namespace, message.payload || message);
-    }
-    this.emit("rawData", message);
-  }
-
-  /**
-   * @deprecated
-   */
-  connect(): void {
-    this.deviceConnected = true;
-  }
-
-  /**
-   * @deprecated
-   */
-  disconnect() {
-    this.deviceConnected = false;
-  }
-
-  setKnownLocalIp(ip: string): void {
-    this.knownLocalIp = ip;
-  }
-
-  removeKnownLocalIp(): void {
-    this.knownLocalIp = "";
-  }
-
-  publishMessage(
-    method: "GET" | "SET",
-    namespace: string,
-    payload: any,
-    callback?: Callback<any>
-  ): MessageId {
-    const data = this.cloudInst.encodeMessage(method, namespace, payload);
-    const messageId = data.header.messageId;
-    this.cloudInst.sendMessage(
-      this.dev,
-      this.knownLocalIp,
-      data,
-      (res: any) => {
-        if (!res) {
-          return (
-            callback &&
-            callback(new Error("Device has no data connection available"), 0)
-          );
-        }
-        if (callback) {
-          this.waitingMessageIds[messageId] = {};
-          this.waitingMessageIds[messageId].callback = callback;
-          this.waitingMessageIds[messageId].timeout = setTimeout(() => {
-            //console.log('TIMEOUT');
-            if (this.waitingMessageIds[messageId].callback) {
-              this.waitingMessageIds[messageId].callback(new Error("Timeout"));
-            }
-            delete this.waitingMessageIds[messageId];
-          }, this.cloudInst.timeout * 2);
-        }
-        this.emit("rawSendData", data);
-      }
-    );
-    return messageId;
-  }
-
-  getSystemAllData(callback: Callback<any>): MessageId {
-    // {"all":{"system":{"hardware":{"type":"mss425e","subType":"eu","version":"2.0.0","chipType":"mt7682","uuid":"1806299596727829081434298f15a991","macAddress":"34:29:8f:15:a9:91"},"firmware":{"version":"2.1.2","compileTime":"2018/08/13 10:42:53 GMT +08:00","wifiMac":"34:31:c4:73:3c:7f","innerIp":"192.168.178.86","server":"iot.meross.com","port":2001,"userId":64416},"time":{"timestamp":1539612975,"timezone":"Europe/Berlin","timeRule":[[1521939600,7200,1],[1540688400,3600,0],[1553994000,7200,1],[1572138000,3600,0],[1585443600,7200,1],[1603587600,3600,0],[1616893200,7200,1],[1635642000,3600,0],[1648342800,7200,1],[1667091600,3600,0],[1679792400,7200,1],[1698541200,3600,0],[1711846800,7200,1],[1729990800,3600,0],[1743296400,7200,1],[1761440400,3600,0],[1774746000,7200,1],[1792890000,3600,0],[1806195600,7200,1],[1824944400,3600,0]]},"online":{"status":1}},"digest":{"togglex":[{"channel":0,"onoff":0,"lmTime":1539608841},{"channel":1,"onoff":0,"lmTime":1539608841},{"channel":2,"onoff":0,"lmTime":1539608841},{"channel":3,"onoff":0,"lmTime":1539608841},{"channel":4,"onoff":0,"lmTime":1539608841}],"triggerx":[],"timerx":[]}}}
-
-    return this.publishMessage("GET", "Appliance.System.All", {}, callback);
-  }
-
-  getSystemDebug(callback: Callback<any>): MessageId {
-    // {"debug":{"system":{"version":"2.1.2","sysUpTime":"114h16m34s","localTimeOffset":7200,"localTime":"Mon Oct 15 16:23:03 2018","suncalc":"7:42;19:49"},"network":{"linkStatus":"connected","signal":50,"ssid":"ApollonHome","gatewayMac":"34:31:c4:73:3c:7f","innerIp":"192.168.178.86","wifiDisconnectCount":1},"cloud":{"activeServer":"iot.meross.com","mainServer":"iot.meross.com","mainPort":2001,"secondServer":"smart.meross.com","secondPort":2001,"userId":64416,"sysConnectTime":"Mon Oct 15 08:06:40 2018","sysOnlineTime":"6h16m23s","sysDisconnectCount":5,"pingTrace":[]}}}
-    return this.publishMessage("GET", "Appliance.System.Debug", {}, callback);
-  }
-
-  getSystemAbilities(callback: Callback<any>): MessageId {
-    // {"payloadVersion":1,"ability":{"Appliance.Config.Key":{},"Appliance.Config.WifiList":{},"Appliance.Config.Wifi":{},"Appliance.Config.Trace":{},"Appliance.System.All":{},"Appliance.System.Hardware":{},"Appliance.System.Firmware":{},"Appliance.System.Debug":{},"Appliance.System.Online":{},"Appliance.System.Time":{},"Appliance.System.Ability":{},"Appliance.System.Runtime":{},"Appliance.System.Report":{},"Appliance.System.Position":{},"Appliance.System.DNDMode":{},"Appliance.Control.Multiple":{"maxCmdNum":5},"Appliance.Control.ToggleX":{},"Appliance.Control.TimerX":{"sunOffsetSupport":1},"Appliance.Control.TriggerX":{},"Appliance.Control.Bind":{},"Appliance.Control.Unbind":{},"Appliance.Control.Upgrade":{},"Appliance.Digest.TriggerX":{},"Appliance.Digest.TimerX":{}}}
-    return this.publishMessage("GET", "Appliance.System.Ability", {}, callback);
-  }
-
-  getSystemReport(callback: Callback<any>): MessageId {
-    return this.publishMessage("GET", "Appliance.System.Report", {}, callback);
-  }
-
-  getSystemRuntime(callback: Callback<any>): MessageId {
-    // Wifi Strength
-    // "payload": {
-    // 		"runtime": {
-    // 			"signal": 86
-    // 		}
-    // 	}
-    return this.publishMessage("GET", "Appliance.System.Runtime", {}, callback);
-  }
-
-  getSystemDNDMode(callback: Callback<any>): MessageId {
-    // DND Mode (LED)
-    // "payload": {
-    // 		"DNDMode": {
-    // 			"mode": 0
-    // 		}
-    // 	}
-    return this.publishMessage("GET", "Appliance.System.DNDMode", {}, callback);
-  }
-
-  setSystemDNDMode(onoff: boolean, callback: Callback<any>): MessageId {
-    const payload = { DNDMode: { mode: onoff ? 1 : 0 } };
-    return this.publishMessage(
-      "SET",
-      "Appliance.System.DNDMode",
-      payload,
-      callback
-    );
-  }
-
-  getOnlineStatus(callback: Callback<any>): MessageId {
-    return this.publishMessage("GET", "Appliance.System.Online", {}, callback);
-  }
-
-  getConfigWifiList(callback: Callback<any>): MessageId {
-    // {"wifiList":[]}
-    return this.publishMessage(
-      "GET",
-      "Appliance.Config.WifiList",
-      {},
-      callback
-    );
-  }
-
-  getConfigTrace(callback: Callback<any>): MessageId {
-    // {"trace":{"ssid":"","code":0,"info":""}}
-    return this.publishMessage("GET", "Appliance.Config.Trace", {}, callback);
-  }
-
-  getControlPowerConsumption(callback: Callback<any>): MessageId {
-    return this.publishMessage(
-      "GET",
-      "Appliance.Control.Consumption",
-      {},
-      callback
-    );
-  }
-
-  getControlPowerConsumptionX(
-    callback: Callback<GetControlPowerConsumptionXResponse>
-  ): MessageId {
-    return this.publishMessage(
-      "GET",
-      "Appliance.Control.ConsumptionX",
-      {},
-      callback
-    );
-  }
-
-  getControlElectricity(
-    callback: Callback<GetControlElectricityResponse>
-  ): MessageId {
-    return this.publishMessage(
-      "GET",
-      "Appliance.Control.Electricity",
-      {},
-      callback
-    );
-  }
-
-  controlToggle(onoff: boolean, callback: Callback<any>): MessageId {
-    const payload = { toggle: { onoff: onoff ? 1 : 0 } };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.Toggle",
-      payload,
-      callback
-    );
-  }
-
-  controlToggleX(
-    channel: number,
-    onoff: boolean,
-    callback: Callback<any>
-  ): MessageId {
-    const payload = { togglex: { channel: channel, onoff: onoff ? 1 : 0 } };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.ToggleX",
-      payload,
-      callback
-    );
-  }
-
-  controlSpray(
-    channel: number,
-    mode: number,
-    callback: Callback<any>
-  ): MessageId {
-    const payload = { spray: { channel: channel, mode: mode || 0 } };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.Spray",
-      payload,
-      callback
-    );
-  }
-
-  controlRollerShutterPosition(
-    channel: number,
-    position: number,
-    callback: Callback<any>
-  ): MessageId {
-    const payload = { position: { position: position, channel: channel } };
-    return this.publishMessage(
-      "SET",
-      "Appliance.RollerShutter.Position",
-      payload,
-      callback
-    );
-  }
-
-  controlRollerShutterUp(channel: number, callback: Callback<any>): MessageId {
-    return this.controlRollerShutterPosition(channel, 100, callback);
-  }
-
-  controlRollerShutterDown(
-    channel: number,
-    callback: Callback<any>
-  ): MessageId {
-    return this.controlRollerShutterPosition(channel, 0, callback);
-  }
-
-  controlRollerShutterStop(
-    channel: number,
-    callback: Callback<any>
-  ): MessageId {
-    return this.controlRollerShutterPosition(channel, -1, callback);
-  }
-
-  getRollerShutterState(callback: Callback<any>): MessageId {
-    return this.publishMessage(
-      "GET",
-      "Appliance.RollerShutter.State",
-      {},
-      callback
-    );
-  }
-
-  getFilterMaintenance(callback: Callback<any>): MessageId {
-    return this.publishMessage(
-      "GET",
-      "Appliance.Control.FilterMaintenance",
-      {},
-      callback
-    );
-  }
-
-  getPhysicalLockState(callback: Callback<any>): MessageId {
-    return this.publishMessage(
-      "GET",
-      "Appliance.Control.PhysicalLock",
-      {},
-      callback
-    );
-  }
-
-  controlPhysicalLock(
-    channel: number,
-    locked: boolean,
-    callback: Callback<any>
-  ): MessageId {
-    const payload = {
-      lock: { channel: channel, onoff: locked ? 1 : 0, uuid: this.dev.uuid },
-    };
-    return this.publishMessage(
-      "SET",
-      "Appliance.GarageDoor.State",
-      payload,
-      callback
-    );
-  }
-
-  getFanState(callback: Callback<any>): MessageId {
-    return this.publishMessage("GET", "Appliance.Control.Fan", {}, callback);
-  }
-
-  controlFan(
-    channel: number,
-    speed: number,
-    maxSpeed: number,
-    callback: Callback<any>
-  ): MessageId {
-    const payload = {
-      fan: [
-        {
-          channel: channel,
-          speed: speed,
-          maxSpeed: maxSpeed,
-          uuid: this.dev.uuid,
-        },
-      ],
-    };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.Fan",
-      payload,
-      callback
-    );
-  }
-
-  getRollerShutterPosition(callback: Callback<any>): MessageId {
-    return this.publishMessage(
-      "GET",
-      "Appliance.RollerShutter.Position",
-      {},
-      callback
-    );
-  }
-
-  controlGarageDoor(
-    channel: number,
-    open: boolean,
-    callback: Callback<any>
-  ): MessageId {
-    const payload = {
-      state: { channel: channel, open: open ? 1 : 0, uuid: this.dev.uuid },
-    };
-    return this.publishMessage(
-      "SET",
-      "Appliance.GarageDoor.State",
-      payload,
-      callback
-    );
-  }
-
-  // {"light":{"capacity":6,"channel":0,"rgb":289,"temperature":80,"luminance":100}}
-  controlLight(light: LightData, callback: Callback<any>): MessageId {
-    const payload = { light: light };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.Light",
-      payload,
-      callback
-    );
-  }
-
-  controlDiffusorSpray(
-    type: string,
-    channel: number,
-    mode: number,
-    callback: Callback<any>
-  ): MessageId {
-    const payload = {
-      spray: [{ channel: channel, mode: mode || 0, uuid: this.dev.uuid }],
-    };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.Diffuser.Spray",
-      payload,
-      callback
-    );
-  }
-
-  controlDiffusorLight(
-    type: string,
-    light: LightData,
-    callback: Callback<any>
-  ): MessageId {
-    light.uuid = this.dev.uuid;
-    const payload = { light: [light] };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.Diffuser.Light",
-      payload,
-      callback
-    );
-  }
-
-  controlThermostatMode(
-    channel: number,
-    modeData: ThermostatModeData,
-    callback: Callback<any>
-  ): MessageId {
-    modeData.channel = channel;
-    const payload = { mode: [modeData] };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.Thermostat.Mode",
-      payload,
-      callback
-    );
-  }
-}
-
-class MerossCloudHubDevice extends MerossCloudDevice {
-  subDeviceList: any;
-  constructor(cloudInstance: any, dev: any, subDeviceList: any) {
-    super(cloudInstance, dev);
-
-    this.subDeviceList = subDeviceList;
-  }
-
-  getHubBattery(callback: any) {
-    const payload = { battery: [] };
-    return this.publishMessage(
-      "GET",
-      "Appliance.Hub.Battery",
-      payload,
-      callback
-    );
-  }
-
-  getMts100All(ids: any, callback: any) {
-    const payload = { all: [] as any[] };
-    ids.forEach((id: any) => payload.all.push({ id: id }));
-    return this.publishMessage(
-      "GET",
-      "Appliance.Hub.Mts100.All",
-      payload,
-      callback
-    );
-  }
-
-  controlHubToggleX(subId: any, onoff: any, callback: any) {
-    const payload = { togglex: [{ id: subId, onoff: onoff ? 1 : 0 }] };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Hub.ToggleX",
-      payload,
-      callback
-    );
-  }
-
-  controlHubMts100Mode(subId: any, mode: any, callback: any) {
-    const payload = { mode: [{ id: subId, state: mode }] };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Hub.Mts100.Mode",
-      payload,
-      callback
-    );
-  }
-
-  controlHubMts100Temperature(subId: any, temp: any, callback: any) {
-    temp.id = subId;
-    const payload = { temperature: [temp] };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Hub.Mts100.Temperature",
-      payload,
-      callback
-    );
   }
 }

@@ -52,9 +52,6 @@ const updateEnergyDataJob = async (
       );
       return;
     }
-    console.log(
-      `Identified enphase app ${activeEnphaseApp.app.name} with id ${activeEnphaseApp.id} to make request for user with id ${userId}.`
-    );
 
     const productionData = await getEnphaseData<ProductionDataResponse>(
       enphaseEnergyClient.requestProductionData,
@@ -75,7 +72,9 @@ const updateEnergyDataJob = async (
       consumptionData.intervals
     );
 
-    console.log(`Fetched ${energyData.length} energy data intervals.`);
+    console.log(
+      `Job (update): Fetched energy data for user ${userId} using ${activeEnphaseApp.app.name} (id: ${activeEnphaseApp.id}).`
+    );
 
     const updatedRows = await enphaseEnergyRepository.saveEnergyData(
       userId,
@@ -83,7 +82,6 @@ const updateEnergyDataJob = async (
       solarSystemId,
       energyData
     );
-    console.log(`Updated ${updatedRows} rows.`);
   }
 };
 
@@ -106,14 +104,16 @@ const verifyEnergyDataConsistencyJob = async (
       const difference = differenceInMinutes(currentEndDate, previousEndDate);
       if (difference > 15) {
         console.log(
-          `Found gap of ${difference} minutes between ${previousEndDate} and ${currentEndDate}`
+          `Job (verify): Found gap of ${difference} minutes between ${previousEndDate} and ${currentEndDate}`
         );
         const dayWithGaps = startOfDay(addMinutes(previousEndDate, 15));
         daysWithGaps.push(dayWithGaps);
 
         const differenceInDays = difference / 60 / 24;
         if (differenceInDays > 1) {
-          console.log("Gap is bigger than 1 day: " + differenceInDays);
+          console.log(
+            "Job (verify): Gap is bigger than 1 day: " + differenceInDays
+          );
           const amountOfDaysMissing = Math.floor(differenceInDays) + 1;
           for (let i = 1; i < amountOfDaysMissing; i++) {
             const dayWithGaps = startOfDay(addDays(previousEndDate, i));
@@ -126,21 +126,19 @@ const verifyEnergyDataConsistencyJob = async (
       ...new Set(daysWithGaps.map((date) => date.getTime())),
     ].map((time) => new Date(time));
     if (uniqueDaysWithGaps.length === 0) {
-      console.log("No gaps found.");
+      console.log("Job (verify): No gaps found.");
       return;
     }
     console.log(uniqueDaysWithGaps);
 
     if (readOnly) {
-      console.log("Read only mode, not updating energy data.");
+      console.log("Job (verify): Read only mode, not updating energy data.");
       return;
     }
 
     for (const day of uniqueDaysWithGaps) {
       await updateEnergyDataJob([userId], day);
     }
-
-    console.log("Job: Verify energy data consistency finished.");
   }
 };
 
@@ -157,14 +155,8 @@ const identifyEnphaseApp = async (userId: number) => {
     await enphaseAuthRepository.querySavedEnphaseAppsByUserId(userId);
 
   if (authorizedUserApps.length === 0) {
-    console.log(
-      `No enphase apps for user with id ${userId} found. Skipping user.`
-    );
     return;
   }
-  console.log(
-    `Found ${authorizedUserApps.length} authorized user enphase apps for user ${userId}`
-  );
 
   // all enphase apps the user has authorized that have a not expired refresh token
   const activeUserApps = authorizedUserApps.filter(
@@ -176,13 +168,10 @@ const identifyEnphaseApp = async (userId: number) => {
 
   if (activeUserApps.length === 0) {
     console.log(
-      `No authorized enphase apps for user with id ${userId} found. Skipping user.`
+      `Job (update): No authorized apps for user ${userId} found. Skipping user.`
     );
     return;
   }
-  console.log(
-    `Found ${activeUserApps.length} active user enphase apps for user ${userId}`
-  );
 
   // identify if enphase apps where used previously for the given user
   const enphaseApiRequest =
@@ -198,9 +187,6 @@ const identifyEnphaseApp = async (userId: number) => {
     entry.userAppId,
     entry.updatedAt,
   ]);
-  console.log(
-    `Found ${priorUserAppUsages.length} prior user app usages for user with id ${userId}.`
-  );
 
   // use unused enphase apps first if available
   const unusedUserEnphaseApps = activeUserApps.filter(
@@ -209,13 +195,9 @@ const identifyEnphaseApp = async (userId: number) => {
         (appDateInterval) => appDateInterval[0] === userApp.id
       )
   );
-  console.log(
-    `Found ${unusedUserEnphaseApps.length} unused user enphase apps for user with id ${userId}.`
-  );
 
   // if unused enphase apps are available, return the first one
   if (unusedUserEnphaseApps.length > 0) {
-    console.log("Returning first unused enphase app:");
     return unusedUserEnphaseApps[0];
   }
 
@@ -244,9 +226,6 @@ const identifyEnphaseApp = async (userId: number) => {
   });
 
   const longestUnusedUserEnphaseAppId = longestUnusedApp[0];
-  console.log(
-    "Returning longest unused enphase app:" + longestUnusedUserEnphaseAppId
-  );
 
   return activeUserApps.find(
     (authorizedApp: ExtendedUserEnphaseApp) =>
@@ -311,7 +290,6 @@ const getEnphaseData = async <EnphaseDataType>(
     freshEnphaseApp,
     getEnphaseDataFunction.name
   );
-  console.log(`App ${freshEnphaseApp?.app.name} made a request.`);
   return data as EnphaseDataType;
 };
 

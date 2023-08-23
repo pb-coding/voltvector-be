@@ -4,6 +4,7 @@ import { v4 as uuid } from "uuid";
 import * as fs from "fs";
 import { promises as fsPromises } from "fs";
 import path from "path";
+import { AuthenticatedRequest } from "../auth/authTypes";
 
 export const logEvents = async (message: string, logName: string) => {
   const dateTime = format(new Date(), "yyyy-MM-dd HH:mm:ss");
@@ -22,7 +23,11 @@ export const logEvents = async (message: string, logName: string) => {
     console.error(error);
   }
 };
-export const logger = (req: Request, res: Response, next: NextFunction) => {
+export const logger = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   logEvents(`${req.method}\t${req.headers.origin}\t${req.url}`, "reqLog.txt");
   console.log(`${req.method} ${req.path}`);
   next();

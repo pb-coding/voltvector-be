@@ -18,7 +18,6 @@ const handleLoginRequest = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const user = await userService.queryUserByEmail(email);
-  console.log(user);
 
   if (!user) {
     return res

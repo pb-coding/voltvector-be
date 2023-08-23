@@ -15,7 +15,7 @@ const retrieveAndSaveEnphaseAuthTokens = async (
       applicationName,
       code
     );
-  console.log(`enphaseAuthTokens: ${enphaseAuthTokens}`);
+
   if (
     !enphaseAuthTokens ||
     !enphaseAuthTokens.access_token ||
