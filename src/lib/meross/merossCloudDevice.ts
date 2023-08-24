@@ -3,24 +3,27 @@
 
 import EventEmitter from "events";
 
+import { MerossCloud } from "./merossCloud";
 import {
   DeviceDefinitionType,
-  Callback,
-  MessageId,
   GetControlPowerConsumptionXResponse,
   GetControlElectricityResponse,
   LightData,
   ThermostatModeData,
+  MerossDeviceInfoType,
+  Message,
+  MessageId,
+  WaitingMessageIds,
 } from "./types";
 
 export class MerossCloudDevice extends EventEmitter {
   clientResponseTopic: string | null;
-  waitingMessageIds: any;
+  waitingMessageIds: WaitingMessageIds;
   dev: DeviceDefinitionType;
-  cloudInst: any;
+  cloudInst: MerossCloud;
   deviceConnected: boolean;
   knownLocalIp: string | null;
-  constructor(cloudInstance: any, dev: DeviceDefinitionType) {
+  constructor(cloudInstance: MerossCloud, dev: DeviceDefinitionType) {
     super();
 
     this.clientResponseTopic = null;
@@ -33,33 +36,27 @@ export class MerossCloudDevice extends EventEmitter {
     this.knownLocalIp = null;
   }
 
-  handleMessage(message: any) {
-    if (!this.deviceConnected) return;
-    if (!message || !message.header) return;
-    if (
-      message &&
-      message.header &&
-      message.header.from &&
-      !message.header.from.includes(this.dev.uuid)
-    )
-      return;
-    // {"header":{"messageId":"14b4951d0627ea904dd8685c480b7b2e","namespace":"Appliance.Control.ToggleX","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539602435,"timestampMs":427,"sign":"f33bb034ac2d5d39289e6fa3dcead081"},"payload":{"togglex":[{"channel":0,"onoff":0,"lmTime":1539602434},{"channel":1,"onoff":0,"lmTime":1539602434},{"channel":2,"onoff":0,"lmTime":1539602434},{"channel":3,"onoff":0,"lmTime":1539602434},{"channel":4,"onoff":0,"lmTime":1539602434}]}}
+  handleMessage(message: Message) {
+    if (!this.deviceConnected || !message || !message.header) return;
+    const { header } = message;
+    const { messageId, method, namespace, from } = header;
 
-    // If the message is the RESP for some previous action, process return the control to the "stopped" method.
-    if (this.waitingMessageIds[message.header.messageId]) {
-      if (this.waitingMessageIds[message.header.messageId].timeout) {
-        clearTimeout(this.waitingMessageIds[message.header.messageId].timeout);
+    if (!from || !from.includes(this.dev.uuid)) return;
+
+    if (this.waitingMessageIds[messageId]) {
+      const { resolve, reject } = this.waitingMessageIds[messageId];
+
+      if (message.payload) {
+        resolve(message.payload);
+      } else {
+        reject(new Error("Invalid response"));
       }
-      this.waitingMessageIds[message.header.messageId].callback(
-        null,
-        message.payload || message
-      );
-      delete this.waitingMessageIds[message.header.messageId];
-    } else if (message.header.method === "PUSH") {
-      // Otherwise process it accordingly
-      const namespace = message.header ? message.header.namespace : "";
+
+      delete this.waitingMessageIds[messageId];
+    } else if (method === "PUSH") {
       this.emit("data", namespace, message.payload || message);
     }
+
     this.emit("rawData", message);
   }
 
@@ -85,265 +82,211 @@ export class MerossCloudDevice extends EventEmitter {
     this.knownLocalIp = "";
   }
 
-  publishMessage(
+  async publishMessage(
     method: "GET" | "SET",
     namespace: string,
-    payload: any,
-    callback?: Callback<any>
-  ): MessageId {
+    payload: any
+  ): Promise<any> {
     const data = this.cloudInst.encodeMessage(method, namespace, payload);
-    const messageId = data.header.messageId;
-    this.cloudInst.sendMessage(
-      this.dev,
-      this.knownLocalIp,
-      data,
-      (res: any) => {
-        if (!res) {
-          return (
-            callback &&
-            callback(new Error("Device has no data connection available"), 0)
-          );
-        }
-        if (callback) {
-          this.waitingMessageIds[messageId] = {};
-          this.waitingMessageIds[messageId].callback = callback;
-          this.waitingMessageIds[messageId].timeout = setTimeout(() => {
-            //console.log('TIMEOUT');
-            if (this.waitingMessageIds[messageId].callback) {
-              this.waitingMessageIds[messageId].callback(new Error("Timeout"));
-            }
-            delete this.waitingMessageIds[messageId];
-          }, this.cloudInst.timeout * 2);
-        }
-        this.emit("rawSendData", data);
-      }
-    );
-    return messageId;
+    const messageId: MessageId = data.header.messageId;
+
+    const responsePromise = new Promise((resolve, reject) => {
+      this.waitingMessageIds[messageId] = {
+        resolve: resolve,
+        reject: reject,
+      };
+
+      setTimeout(() => {
+        reject(new Error("Timeout"));
+        delete this.waitingMessageIds[messageId];
+      }, this.cloudInst.timeout * 2);
+    });
+
+    try {
+      await this.cloudInst.sendMessage(this.dev, this.knownLocalIp, data);
+      this.emit("rawSendData", data);
+      return await responsePromise;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  getSystemAllData(callback: Callback<any>): MessageId {
-    // {"all":{"system":{"hardware":{"type":"mss425e","subType":"eu","version":"2.0.0","chipType":"mt7682","uuid":"1806299596727829081434298f15a991","macAddress":"34:29:8f:15:a9:91"},"firmware":{"version":"2.1.2","compileTime":"2018/08/13 10:42:53 GMT +08:00","wifiMac":"34:31:c4:73:3c:7f","innerIp":"192.168.178.86","server":"iot.meross.com","port":2001,"userId":64416},"time":{"timestamp":1539612975,"timezone":"Europe/Berlin","timeRule":[[1521939600,7200,1],[1540688400,3600,0],[1553994000,7200,1],[1572138000,3600,0],[1585443600,7200,1],[1603587600,3600,0],[1616893200,7200,1],[1635642000,3600,0],[1648342800,7200,1],[1667091600,3600,0],[1679792400,7200,1],[1698541200,3600,0],[1711846800,7200,1],[1729990800,3600,0],[1743296400,7200,1],[1761440400,3600,0],[1774746000,7200,1],[1792890000,3600,0],[1806195600,7200,1],[1824944400,3600,0]]},"online":{"status":1}},"digest":{"togglex":[{"channel":0,"onoff":0,"lmTime":1539608841},{"channel":1,"onoff":0,"lmTime":1539608841},{"channel":2,"onoff":0,"lmTime":1539608841},{"channel":3,"onoff":0,"lmTime":1539608841},{"channel":4,"onoff":0,"lmTime":1539608841}],"triggerx":[],"timerx":[]}}}
-
-    return this.publishMessage("GET", "Appliance.System.All", {}, callback);
+  async getSystemAllData(): Promise<MerossDeviceInfoType> {
+    return await this.publishMessage("GET", "Appliance.System.All", {});
   }
 
-  getSystemDebug(callback: Callback<any>): MessageId {
+  async getSystemDebug(): Promise<any> {
     // {"debug":{"system":{"version":"2.1.2","sysUpTime":"114h16m34s","localTimeOffset":7200,"localTime":"Mon Oct 15 16:23:03 2018","suncalc":"7:42;19:49"},"network":{"linkStatus":"connected","signal":50,"ssid":"ApollonHome","gatewayMac":"34:31:c4:73:3c:7f","innerIp":"192.168.178.86","wifiDisconnectCount":1},"cloud":{"activeServer":"iot.meross.com","mainServer":"iot.meross.com","mainPort":2001,"secondServer":"smart.meross.com","secondPort":2001,"userId":64416,"sysConnectTime":"Mon Oct 15 08:06:40 2018","sysOnlineTime":"6h16m23s","sysDisconnectCount":5,"pingTrace":[]}}}
-    return this.publishMessage("GET", "Appliance.System.Debug", {}, callback);
+    return await this.publishMessage("GET", "Appliance.System.Debug", {});
   }
 
-  getSystemAbilities(callback: Callback<any>): MessageId {
+  async getSystemAbilities(): Promise<any> {
     // {"payloadVersion":1,"ability":{"Appliance.Config.Key":{},"Appliance.Config.WifiList":{},"Appliance.Config.Wifi":{},"Appliance.Config.Trace":{},"Appliance.System.All":{},"Appliance.System.Hardware":{},"Appliance.System.Firmware":{},"Appliance.System.Debug":{},"Appliance.System.Online":{},"Appliance.System.Time":{},"Appliance.System.Ability":{},"Appliance.System.Runtime":{},"Appliance.System.Report":{},"Appliance.System.Position":{},"Appliance.System.DNDMode":{},"Appliance.Control.Multiple":{"maxCmdNum":5},"Appliance.Control.ToggleX":{},"Appliance.Control.TimerX":{"sunOffsetSupport":1},"Appliance.Control.TriggerX":{},"Appliance.Control.Bind":{},"Appliance.Control.Unbind":{},"Appliance.Control.Upgrade":{},"Appliance.Digest.TriggerX":{},"Appliance.Digest.TimerX":{}}}
-    return this.publishMessage("GET", "Appliance.System.Ability", {}, callback);
+    return await this.publishMessage("GET", "Appliance.System.Ability", {});
   }
 
-  getSystemReport(callback: Callback<any>): MessageId {
-    return this.publishMessage("GET", "Appliance.System.Report", {}, callback);
+  async getSystemReport(): Promise<any> {
+    return await this.publishMessage("GET", "Appliance.System.Report", {});
   }
 
-  getSystemRuntime(callback: Callback<any>): MessageId {
+  async getSystemRuntime(): Promise<any> {
     // Wifi Strength
     // "payload": {
     // 		"runtime": {
     // 			"signal": 86
     // 		}
     // 	}
-    return this.publishMessage("GET", "Appliance.System.Runtime", {}, callback);
+    return await this.publishMessage("GET", "Appliance.System.Runtime", {});
   }
 
-  getSystemDNDMode(callback: Callback<any>): MessageId {
+  async getSystemDNDMode(): Promise<any> {
     // DND Mode (LED)
     // "payload": {
     // 		"DNDMode": {
     // 			"mode": 0
     // 		}
     // 	}
-    return this.publishMessage("GET", "Appliance.System.DNDMode", {}, callback);
+    return await this.publishMessage("GET", "Appliance.System.DNDMode", {});
   }
 
-  setSystemDNDMode(onoff: boolean, callback: Callback<any>): MessageId {
+  async setSystemDNDMode(onoff: boolean): Promise<any> {
     const payload = { DNDMode: { mode: onoff ? 1 : 0 } };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.System.DNDMode",
-      payload,
-      callback
+      payload
     );
   }
 
-  getOnlineStatus(callback: Callback<any>): MessageId {
-    return this.publishMessage("GET", "Appliance.System.Online", {}, callback);
+  async getOnlineStatus(): Promise<any> {
+    return await this.publishMessage("GET", "Appliance.System.Online", {});
   }
 
-  getConfigWifiList(callback: Callback<any>): MessageId {
+  async getConfigWifiList(): Promise<any> {
     // {"wifiList":[]}
-    return this.publishMessage(
-      "GET",
-      "Appliance.Config.WifiList",
-      {},
-      callback
-    );
+    return await this.publishMessage("GET", "Appliance.Config.WifiList", {});
   }
 
-  getConfigTrace(callback: Callback<any>): MessageId {
+  async getConfigTrace(): Promise<any> {
     // {"trace":{"ssid":"","code":0,"info":""}}
-    return this.publishMessage("GET", "Appliance.Config.Trace", {}, callback);
+    return await this.publishMessage("GET", "Appliance.Config.Trace", {});
   }
 
-  getControlPowerConsumption(callback: Callback<any>): MessageId {
-    return this.publishMessage(
+  async getControlPowerConsumption(): Promise<any> {
+    return await this.publishMessage(
       "GET",
       "Appliance.Control.Consumption",
-      {},
-      callback
+      {}
     );
   }
 
-  getControlPowerConsumptionX(
-    callback: Callback<GetControlPowerConsumptionXResponse>
-  ): MessageId {
-    return this.publishMessage(
+  async getControlPowerConsumptionX(): Promise<GetControlPowerConsumptionXResponse> {
+    return await this.publishMessage(
       "GET",
       "Appliance.Control.ConsumptionX",
-      {},
-      callback
+      {}
     );
   }
 
-  getControlElectricity(
-    callback: Callback<GetControlElectricityResponse>
-  ): MessageId {
-    return this.publishMessage(
+  async getControlElectricity(): Promise<GetControlElectricityResponse> {
+    return await this.publishMessage(
       "GET",
       "Appliance.Control.Electricity",
-      {},
-      callback
+      {}
     );
   }
 
-  controlToggle(onoff: boolean, callback: Callback<any>): MessageId {
+  async controlToggle(onoff: boolean): Promise<any> {
     const payload = { toggle: { onoff: onoff ? 1 : 0 } };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.Control.Toggle",
-      payload,
-      callback
+      payload
     );
   }
 
-  controlToggleX(
-    channel: number,
-    onoff: boolean,
-    callback: Callback<any>
-  ): MessageId {
+  async controlToggleX(channel: number, onoff: boolean): Promise<any> {
     const payload = { togglex: { channel: channel, onoff: onoff ? 1 : 0 } };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.Control.ToggleX",
-      payload,
-      callback
+      payload
     );
   }
 
-  controlSpray(
-    channel: number,
-    mode: number,
-    callback: Callback<any>
-  ): MessageId {
+  async controlSpray(channel: number, mode: number): Promise<any> {
     const payload = { spray: { channel: channel, mode: mode || 0 } };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.Spray",
-      payload,
-      callback
-    );
+    return await this.publishMessage("SET", "Appliance.Control.Spray", payload);
   }
 
-  controlRollerShutterPosition(
+  async controlRollerShutterPosition(
     channel: number,
-    position: number,
-    callback: Callback<any>
-  ): MessageId {
+    position: number
+  ): Promise<any> {
     const payload = { position: { position: position, channel: channel } };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.RollerShutter.Position",
-      payload,
-      callback
+      payload
     );
   }
 
-  controlRollerShutterUp(channel: number, callback: Callback<any>): MessageId {
-    return this.controlRollerShutterPosition(channel, 100, callback);
+  async controlRollerShutterUp(channel: number): Promise<any> {
+    return this.controlRollerShutterPosition(channel, 100);
   }
 
-  controlRollerShutterDown(
-    channel: number,
-    callback: Callback<any>
-  ): MessageId {
-    return this.controlRollerShutterPosition(channel, 0, callback);
+  async controlRollerShutterDown(channel: number): Promise<any> {
+    return this.controlRollerShutterPosition(channel, 0);
   }
 
-  controlRollerShutterStop(
-    channel: number,
-    callback: Callback<any>
-  ): MessageId {
-    return this.controlRollerShutterPosition(channel, -1, callback);
+  async controlRollerShutterStop(channel: number): Promise<any> {
+    return this.controlRollerShutterPosition(channel, -1);
   }
 
-  getRollerShutterState(callback: Callback<any>): MessageId {
-    return this.publishMessage(
+  async getRollerShutterState(): Promise<any> {
+    return await this.publishMessage(
       "GET",
       "Appliance.RollerShutter.State",
-      {},
-      callback
+      {}
     );
   }
 
-  getFilterMaintenance(callback: Callback<any>): MessageId {
-    return this.publishMessage(
+  async getFilterMaintenance(): Promise<any> {
+    return await this.publishMessage(
       "GET",
       "Appliance.Control.FilterMaintenance",
-      {},
-      callback
+      {}
     );
   }
 
-  getPhysicalLockState(callback: Callback<any>): MessageId {
-    return this.publishMessage(
+  async getPhysicalLockState(): Promise<any> {
+    return await this.publishMessage(
       "GET",
       "Appliance.Control.PhysicalLock",
-      {},
-      callback
+      {}
     );
   }
 
-  controlPhysicalLock(
-    channel: number,
-    locked: boolean,
-    callback: Callback<any>
-  ): MessageId {
+  async controlPhysicalLock(channel: number, locked: boolean): Promise<any> {
     const payload = {
       lock: { channel: channel, onoff: locked ? 1 : 0, uuid: this.dev.uuid },
     };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.GarageDoor.State",
-      payload,
-      callback
+      payload
     );
   }
 
-  getFanState(callback: Callback<any>): MessageId {
-    return this.publishMessage("GET", "Appliance.Control.Fan", {}, callback);
+  async getFanState(): Promise<any> {
+    return await this.publishMessage("GET", "Appliance.Control.Fan", {});
   }
 
-  controlFan(
+  async controlFan(
     channel: number,
     speed: number,
-    maxSpeed: number,
-    callback: Callback<any>
-  ): MessageId {
+    maxSpeed: number
+  ): Promise<any> {
     const payload = {
       fan: [
         {
@@ -354,94 +297,69 @@ export class MerossCloudDevice extends EventEmitter {
         },
       ],
     };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.Fan",
-      payload,
-      callback
-    );
+    return await this.publishMessage("SET", "Appliance.Control.Fan", payload);
   }
 
-  getRollerShutterPosition(callback: Callback<any>): MessageId {
-    return this.publishMessage(
+  async getRollerShutterPosition(): Promise<any> {
+    return await this.publishMessage(
       "GET",
       "Appliance.RollerShutter.Position",
-      {},
-      callback
+      {}
     );
   }
 
-  controlGarageDoor(
-    channel: number,
-    open: boolean,
-    callback: Callback<any>
-  ): MessageId {
+  async controlGarageDoor(channel: number, open: boolean): Promise<any> {
     const payload = {
       state: { channel: channel, open: open ? 1 : 0, uuid: this.dev.uuid },
     };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.GarageDoor.State",
-      payload,
-      callback
+      payload
     );
   }
 
   // {"light":{"capacity":6,"channel":0,"rgb":289,"temperature":80,"luminance":100}}
-  controlLight(light: LightData, callback: Callback<any>): MessageId {
+  async controlLight(light: LightData): Promise<any> {
     const payload = { light: light };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Control.Light",
-      payload,
-      callback
-    );
+    return await this.publishMessage("SET", "Appliance.Control.Light", payload);
   }
 
-  controlDiffusorSpray(
+  async controlDiffusorSpray(
     type: string,
     channel: number,
-    mode: number,
-    callback: Callback<any>
-  ): MessageId {
+    mode: number
+  ): Promise<any> {
     const payload = {
       spray: [{ channel: channel, mode: mode || 0, uuid: this.dev.uuid }],
     };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.Control.Diffuser.Spray",
-      payload,
-      callback
+      payload
     );
   }
 
-  controlDiffusorLight(
-    type: string,
-    light: LightData,
-    callback: Callback<any>
-  ): MessageId {
+  async controlDiffusorLight(type: string, light: LightData): Promise<any> {
     light.uuid = this.dev.uuid;
     const payload = { light: [light] };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.Control.Diffuser.Light",
-      payload,
-      callback
+      payload
     );
   }
 
-  controlThermostatMode(
+  async controlThermostatMode(
     channel: number,
-    modeData: ThermostatModeData,
-    callback: Callback<any>
-  ): MessageId {
+    modeData: ThermostatModeData
+  ): Promise<any> {
     modeData.channel = channel;
     const payload = { mode: [modeData] };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.Control.Thermostat.Mode",
-      payload,
-      callback
+      payload
     );
   }
 }

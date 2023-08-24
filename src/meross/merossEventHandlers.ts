@@ -17,135 +17,113 @@ const getUserMerossCredentials = (userId: number) => {
   };
 };
 
-export const initializeMerossConnectionForUser = (
+export const initializeMerossConnectionForUser = async (
   userId: number
 ): Promise<MerossCloud> => {
-  return new Promise((resolve, reject) => {
-    try {
-      if (merossConnectionCache[userId]) {
-        console.log("using cached meross connection for user: " + userId);
-        resolve(merossConnectionCache[userId]);
-        return;
-      }
+  if (merossConnectionCache[userId]) {
+    console.log("using cached meross connection for user: " + userId);
+    return merossConnectionCache[userId];
+  }
 
-      const credentials = getUserMerossCredentials(userId);
-      const options = {
-        email: credentials.email,
-        password: credentials.password,
-        logger: console.log,
-        localHttpFirst: false,
-        onlyLocalForGet: false,
-        timeout: 3000,
-      };
+  const credentials = getUserMerossCredentials(userId);
+  const options = {
+    email: credentials.email,
+    password: credentials.password,
+    logger: console.log,
+    localHttpFirst: false,
+    onlyLocalForGet: false,
+    timeout: 3000,
+  };
 
-      const meross = new MerossCloud(options);
+  const meross = new MerossCloud(options);
+  attachEventListeners(meross, userId);
 
-      meross.on(
-        "deviceInitialized",
-        (
-          deviceId: string,
-          deviceDef: DeviceDefinitionType,
-          device: MerossCloudDevice
-        ) => {
-          console.log(
-            `Meross: (userId: ${userId}): New device ${deviceId} initialized`
-          );
+  try {
+    await meross.connect();
 
-          device.on("connected", () => {
-            console.log(
-              `Meross: (userId: ${userId}): DEV: ${deviceId} connected`
-            );
-          });
+    const connectionLifetime = 3600000; // 1 hour
 
-          device.on("close", (error: any) => {
-            console.log(
-              `Meross: (userId: ${userId}): DEV: ${deviceId} closed:  ${error}`
-            );
-          });
+    setTimeout(async () => {
+      await clearCacheForUser(userId);
+    }, connectionLifetime);
 
-          device.on("error", (error: any) => {
-            console.log(
-              `Meross: (userId: ${userId}): DEV: ${deviceId} closed:  ${error}`
-            );
-          });
+    merossConnectionCache[userId] = meross;
 
-          device.on("reconnect", () => {
-            console.log(
-              `Meross: (userId: ${userId}): DEV: ${deviceId} reconnected`
-            );
-          });
+    return meross;
+  } catch (error) {
+    console.error(`Meross (userId: ${userId}): connect error: ${error}`);
+    await clearCacheForUser(userId);
+    throw new Error(`Meross (userId: ${userId}): connect error: ${error}`);
+  }
+};
 
-          device.on("data", (namespace: any, payload: any) => {
-            console.log(
-              `Meross: (userId: ${userId}): DEV: ${deviceId} ${namespace} - data: ${JSON.stringify(
-                payload
-              )}`
-            );
-          });
-        }
+const attachEventListeners = (meross: MerossCloud, userId: number) => {
+  meross.on(
+    "deviceInitialized",
+    (
+      deviceId: string,
+      deviceDef: DeviceDefinitionType,
+      device: MerossCloudDevice
+    ) => {
+      console.log(
+        `Meross: (userId: ${userId}): New device ${deviceId} initialized`
       );
 
-      meross.on("connected", (deviceId: string) => {
-        console.log(`Meross: (userId: ${userId}): ${deviceId} connected`);
+      device.on("connected", () => {
+        console.log(`Meross: (userId: ${userId}): DEV: ${deviceId} connected`);
       });
 
-      meross.on("close", (deviceId: string, error) => {
-        console.log(`Meross (userId: ${userId}): ${deviceId} closed: ${error}`);
-        clearCacheForUser(userId);
-      });
-
-      meross.on("error", (deviceId: string, error) => {
-        console.log(`Meross (userId: ${userId}): ${deviceId} error: ${error}`);
-        clearCacheForUser(userId);
-      });
-
-      meross.on("reconnect", (deviceId: string) => {
-        console.log(`Meross (userId: ${userId}): ${deviceId} reconnected`);
-        console.log(deviceId + " reconnected");
-      });
-
-      meross.on("data", (deviceId: string, payload) => {
+      device.on("close", (error: any) => {
         console.log(
-          `Meross (userId: ${userId}): ${deviceId} data: ${JSON.stringify(
+          `Meross: (userId: ${userId}): DEV: ${deviceId} closed:  ${error}`
+        );
+      });
+
+      device.on("error", (error: any) => {
+        console.log(
+          `Meross: (userId: ${userId}): DEV: ${deviceId} closed:  ${error}`
+        );
+      });
+
+      device.on("reconnect", () => {
+        console.log(
+          `Meross: (userId: ${userId}): DEV: ${deviceId} reconnected`
+        );
+      });
+
+      device.on("data", (namespace: any, payload: any) => {
+        console.log(
+          `Meross: (userId: ${userId}): DEV: ${deviceId} ${namespace} - data: ${JSON.stringify(
             payload
           )}`
         );
       });
-
-      meross.connect((error) => {
-        if (error) {
-          console.log(`Meross (userId: ${userId}): connect error: ${error}`);
-          clearCacheForUser(userId);
-          reject(
-            new Error(`Meross (userId: ${userId}): connect error: ${error}`)
-          );
-          return;
-        }
-
-        resolve(meross);
-      });
-
-      const connectionLifetime = 3600000; // e.g., 1 hour
-      setTimeout(() => {
-        clearCacheForUser(userId);
-      }, connectionLifetime);
-
-      merossConnectionCache[userId] = meross;
-      if (!meross) {
-        throw new Error(
-          "Error initializing Meross connection for user: " + userId
-        );
-      }
-    } catch (error) {
-      reject(
-        new Error(
-          "Error initializing Meross connection for user: " +
-            userId +
-            " error: " +
-            error
-        )
-      );
     }
+  );
+
+  meross.on("connected", (deviceId: string) => {
+    console.log(`Meross: (userId: ${userId}): ${deviceId} connected`);
+  });
+
+  meross.on("close", (deviceId: string, error) => {
+    console.log(`Meross (userId: ${userId}): ${deviceId} closed: ${error}`);
+    clearCacheForUser(userId); // TODO: does this need to be async?
+  });
+
+  meross.on("error", (deviceId: string, error) => {
+    console.log(`Meross (userId: ${userId}): ${deviceId} error: ${error}`);
+    clearCacheForUser(userId); // TODO: does this need to be async?
+  });
+
+  meross.on("reconnect", (deviceId: string) => {
+    console.log(`Meross (userId: ${userId}): ${deviceId} reconnected`);
+    console.log(deviceId + " reconnected");
+  });
+
+  meross.on("data", (deviceId: string, payload) => {
+    console.log(
+      `Meross (userId: ${userId}): ${deviceId} data: ${JSON.stringify(payload)}`
+    );
   });
 };
 
@@ -174,14 +152,12 @@ export const getDeviceByIdForUser = async (
   return device;
 };
 
-export const clearCacheForUser = (userId: number) => {
+export const clearCacheForUser = async (userId: number) => {
   const merossConnection = merossConnectionCache[userId];
   if (!merossConnection) {
     return;
   }
-  merossConnection.logout(
-    console.log(`Meross (userId: ${userId}) logging out.`)
-  );
+  await merossConnection.logout();
   merossConnection.removeAllListeners();
   delete merossConnectionCache[userId];
 };

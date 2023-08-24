@@ -10,6 +10,26 @@ import {
   GetControlElectricityResponse,
 } from "../lib/meross/types";
 
+const retryPromise = async <T>(
+  fn: () => Promise<T>,
+  retries = 2
+): Promise<T> => {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries > 0) {
+      if (error instanceof Error) {
+        console.log(
+          `Meross Error (publish Message): ${error.message}! Retrying...`
+        );
+      }
+      return retryPromise(fn, retries - 1);
+    } else {
+      throw error;
+    }
+  }
+};
+
 const getDevicesByUserId = async (userId: number) => {
   const devices = await getAllDevicesForUser(userId);
 
@@ -31,133 +51,26 @@ const getDeviceByUserAndDeviceId = async (userId: number, deviceId: string) => {
 const getDeviceInfo = async (
   device: MerossCloudDevice
 ): Promise<MerossDeviceInfoType> => {
-  let errorCount = 0;
-  return new Promise((resolve, reject) => {
-    device.getSystemAllData((error: any, response: MerossDeviceInfoType) => {
-      if (error) {
-        errorCount++;
-        if (errorCount <= 1) {
-          // Only retry once
-          console.log("Error fetching device info. Retrying...");
-          getDeviceInfo(device)
-            .then((success) => resolve(success))
-            .catch((error) => reject(error));
-          return;
-        } else {
-          // unssuccessful after 2 tries
-          console.log(
-            "Get Device Info Response: Error: " +
-              error +
-              " Error Count: " +
-              errorCount
-          );
-          reject(error);
-        }
-      } else {
-        resolve(response);
-      }
-    });
-  });
+  return retryPromise(() => device.getSystemAllData());
 };
 
 const getDevicePowerHistory = async (
   device: MerossCloudDevice
 ): Promise<GetControlPowerConsumptionXResponse> => {
-  let errorCount = 0;
-  return new Promise((resolve, reject) => {
-    device.getControlPowerConsumptionX(
-      (error: any, response: GetControlPowerConsumptionXResponse) => {
-        if (error) {
-          errorCount++;
-          if (errorCount <= 1) {
-            // Only retry once
-            console.log("Error fetching device power consumption. Retrying...");
-            getDevicePowerHistory(device)
-              .then((success) => resolve(success))
-              .catch((error) => reject(error));
-            return;
-          } else {
-            // unssuccessful after 2 tries
-            console.log(
-              "Get Device Power Consumption Response: Error: " +
-                error +
-                " Error Count: " +
-                errorCount
-            );
-            reject(error);
-          }
-        } else {
-          resolve(response);
-        }
-      }
-    );
-  });
+  return retryPromise(() => device.getControlPowerConsumptionX());
 };
 
 const getDeviceElectricity = async (
   device: MerossCloudDevice
 ): Promise<GetControlElectricityResponse> => {
-  let errorCount = 0;
-  return new Promise((resolve, reject) => {
-    device.getControlElectricity(
-      (error: any, response: GetControlElectricityResponse) => {
-        if (error) {
-          errorCount++;
-          if (errorCount <= 1) {
-            // Only retry once
-            console.log("Error fetching device electricity. Retrying...");
-            getDeviceElectricity(device)
-              .then((success) => resolve(success))
-              .catch((error) => reject(error));
-            return;
-          } else {
-            // unssuccessful after 2 tries
-            console.log(
-              "Get Device Electricity Response: Error: " +
-                error +
-                " Error Count: " +
-                errorCount
-            );
-            reject(error);
-          }
-        } else {
-          resolve(response);
-        }
-      }
-    );
-  });
+  return retryPromise(() => device.getControlElectricity());
 };
 
-const toggleDevice = (
+const toggleDevice = async (
   device: MerossCloudDevice,
   desiredDeviceState: boolean
 ) => {
-  let errorCount = 0;
-  return new Promise((resolve, reject) => {
-    device.controlToggleX(0, desiredDeviceState, (error: any) => {
-      if (error) {
-        errorCount++;
-
-        if (errorCount <= 1) {
-          console.log("Error toggling device. Retrying...");
-          // Only retry once
-          toggleDevice(device, desiredDeviceState)
-            .then((success) => resolve(success))
-            .catch((error) => reject(error));
-          return;
-        } else {
-          // unssuccessful after 2 tries
-          console.log(
-            "Toggle Response: Error: " + error + " Error Count: " + errorCount
-          );
-          reject(error);
-        }
-      } else {
-        // success
-        resolve(true);
-      }
-    });
-  });
+  return retryPromise(() => device.controlToggleX(0, desiredDeviceState));
 };
 
 const merossService = {

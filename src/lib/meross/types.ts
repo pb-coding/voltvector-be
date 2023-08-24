@@ -4,7 +4,6 @@
 import mqtt from "mqtt";
 import { MerossCloudDevice } from "./merossCloudDevice";
 
-export type MessageId = string;
 export type Callback<T> = (error: Error | null, data: T) => void;
 export type CallbackOptionalData<T> = (error: Error | null, data?: T) => void;
 export type ErrorCallback = (error: Error | null) => void;
@@ -195,3 +194,22 @@ export type UuidParameters = {
 };
 
 export type ParameterObject = LoginParameters | UuidParameters | {};
+
+export type Message = {
+  header: {
+    messageId: string;
+    method: "GET" | "SET" | "PUSH";
+    namespace: string;
+    from?: string;
+  };
+  payload?: any;
+};
+
+export type MessageId = string;
+
+export type WaitingMessageIds = {
+  [messageId: MessageId]: {
+    resolve: (value?: any) => void;
+    reject: (reason?: any) => void;
+  };
+};

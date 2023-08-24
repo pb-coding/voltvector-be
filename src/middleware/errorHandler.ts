@@ -27,6 +27,8 @@ const errorHandler = (
     }
   }
 
+  console.log(errorMessage);
+
   res.status(statusCode).json({
     error: errorMessage,
   });

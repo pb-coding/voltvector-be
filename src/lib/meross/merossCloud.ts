@@ -7,6 +7,7 @@
 import * as mqtt from "mqtt";
 import * as crypto from "crypto";
 import request from "request";
+import { promisify } from "util";
 import EventEmitter from "events";
 import { v4 as uuidv4 } from "uuid";
 
@@ -20,8 +21,6 @@ import {
   CloudOptions,
   MqttConnectionsType,
   MerossDeviceListType,
-  CallbackOptionalData,
-  Callback,
   DeviceDefinitionType,
   DeviceList,
 } from "./types";
@@ -32,6 +31,8 @@ const LOGIN_URL = `${MEROSS_URL}/v1/Auth/Login`;
 const LOGOUT_URL = `${MEROSS_URL}/v1/Profile/logout`;
 const DEV_LIST = `${MEROSS_URL}/v1/Device/devList`;
 const SUBDEV_LIST = `${MEROSS_URL}/v1/Hub/getSubDevices`;
+
+const requestAsync = promisify(request);
 
 function generateRandomString(length: number) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -60,12 +61,6 @@ export class MerossCloud extends EventEmitter {
   mqttConnections: MqttConnectionsType;
   devices: MerossDeviceListType;
   clientResponseTopic: string | null;
-  /*
-        email
-        password
-        localHttpFirst
-        timeout
-    */
 
   constructor(options: CloudOptions) {
     super();
@@ -89,11 +84,7 @@ export class MerossCloud extends EventEmitter {
     this.clientResponseTopic = null;
   }
 
-  authenticatedPost(
-    url: string,
-    paramsData: ParameterObject,
-    callback: CallbackOptionalData<any>
-  ) {
+  async authenticatedPost(url: string, paramsData: ParameterObject) {
     const nonce = generateRandomString(16);
     const timestampMillis = Date.now();
     const loginParams = encodeParams(paramsData);
@@ -124,39 +115,42 @@ export class MerossCloud extends EventEmitter {
       form: payload,
       timeout: this.timeout,
     };
+
     this.options.logger &&
       this.options.logger(`HTTP-Call: ${JSON.stringify(options)}`);
-    // Perform the request.
-    request(options, (error, response, body) => {
-      if (!error && response && response.statusCode === 200 && body) {
-        this.options.logger && this.options.logger(`HTTP-Response OK: ${body}`);
-        try {
-          body = JSON.parse(body);
-        } catch (err) {
-          body = {};
-        }
 
-        if (body.apiStatus === 0) {
-          return callback && callback(null, body.data);
-        }
-        return (
-          callback &&
-          callback(
-            new Error(
-              `${body.apiStatus} (${getErrorMessage(body.apiStatus)})${
-                body.info ? ` - ${body.info}` : ""
+    return new Promise((resolve, reject) => {
+      request(options, (error, response, body) => {
+        if (!error && response && response.statusCode === 200 && body) {
+          this.options.logger &&
+            this.options.logger(`HTTP-Response OK: ${body}`);
+          try {
+            body = JSON.parse(body);
+          } catch (err) {
+            body = {};
+          }
+
+          if (body.apiStatus === 0) {
+            resolve(body.data);
+          } else {
+            reject(
+              new Error(
+                `${body.apiStatus} (${getErrorMessage(body.apiStatus)})${
+                  body.info ? ` - ${body.info}` : ""
+                }`
+              )
+            );
+          }
+        } else {
+          this.options.logger &&
+            this.options.logger(
+              `HTTP-Response Error: ${error} / Status=${
+                response ? response.statusCode : "--"
               }`
-            )
-          )
-        );
-      }
-      this.options.logger &&
-        this.options.logger(
-          `HTTP-Response Error: ${error} / Status=${
-            response ? response.statusCode : "--"
-          }`
-        );
-      return callback && callback(error);
+            );
+          reject(error);
+        }
+      });
     });
   }
 
@@ -191,122 +185,101 @@ export class MerossCloud extends EventEmitter {
     this.devices[deviceId].connect();
   }
 
-  connect(callback: Callback<number>): void {
-    if (!this.options.email) {
-      return callback && callback(new Error("Email missing"), 0);
-    }
-    if (!this.options.password) {
-      return callback && callback(new Error("Password missing"), 0);
-    }
-    const logIdentifier = generateRandomString(30) + uuidv4();
-    //'0b11b194f83724b614a6975b112f63cee2f098-8125-40c7-a280-5115913d9887';// '%030x' % random.randrange(16 ** 30) + str(uuid.uuid4())
-    // 54dp8pv70pz0a94ye8c1q5j13nhtb55dc30135-0cd6-4801-bc13-8608120b05d6
-    // aa965f72dc01d414d8efa8360bade3  36894452-c55b-4f10-8ca3-c60edba97728
-    const data = {
-      email: this.options.email,
-      password: this.options.password,
-      mobileInfo: {
-        deviceModel: "",
-        mobileOsVersion: "",
-        mobileOs: process.platform,
-        uuid: logIdentifier,
-        carrier: "",
-      },
-    } satisfies LoginParameters;
-    //console.log(JSON.stringify(data));
-
-    this.authenticatedPost(
-      LOGIN_URL,
-      data,
-      (err: any, loginResponse: LoginResponse) => {
-        // console.log(loginResponse);
-        if (err) {
-          callback && callback(err, 0);
-          return;
-        }
-        if (!loginResponse) {
-          callback &&
-            callback(new Error("No valid Login Response data received"), 0);
-          return;
-        }
-        this.token = loginResponse.token;
-        this.key = loginResponse.key;
-        this.userId = loginResponse.userid.toString();
-        this.userEmail = loginResponse.email;
-        this.authenticated = true;
-
-        this.authenticatedPost(
-          DEV_LIST,
-          {},
-          (err: any, deviceList: DeviceList) => {
-            // console.log(JSON.stringify(deviceList, null, 2));
-            let initCounter = 0;
-            let deviceListLength = 0;
-            if (deviceList && Array.isArray(deviceList)) {
-              deviceListLength = deviceList.length;
-              deviceList.forEach((dev) => {
-                //const deviceType = dev.deviceType;
-                if (dev.deviceType.startsWith("msh300")) {
-                  this.options.logger &&
-                    this.options.logger(`${dev.uuid} Detected Hub`);
-                  this.authenticatedPost(
-                    SUBDEV_LIST,
-                    { uuid: dev.uuid },
-                    (err: any, subDeviceList: any) => {
-                      this.connectDevice(
-                        new MerossCloudHubDevice(this, dev, subDeviceList),
-                        dev
-                      );
-                      initCounter++;
-                      if (initCounter === deviceListLength)
-                        callback && callback(null, deviceListLength);
-                    }
-                  );
-                } else {
-                  this.connectDevice(new MerossCloudDevice(this, dev), dev);
-                  initCounter++;
-                }
-              });
-            }
-
-            if (initCounter === deviceListLength)
-              callback && callback(null, deviceListLength);
-          }
-        );
+  async connect(): Promise<number> {
+    try {
+      if (!this.options.email) {
+        throw new Error("Meross: Email missing");
       }
-    );
+      if (!this.options.password) {
+        throw new Error("Meross: Password missing");
+      }
+      const logIdentifier = generateRandomString(30) + uuidv4();
+      const data = {
+        email: this.options.email,
+        password: this.options.password,
+        mobileInfo: {
+          deviceModel: "",
+          mobileOsVersion: "",
+          mobileOs: process.platform,
+          uuid: logIdentifier,
+          carrier: "",
+        },
+      } satisfies LoginParameters;
+      //console.log(JSON.stringify(data));
 
-    /*
-        /app/64416/subscribe <-- {"header":{"messageId":"b5da1e168cba7a681afcff82eaf703c8","namespace":"Appliance.System.Online","timestamp":1539614195,"method":"PUSH","sign":"b16c2c4cbb5acf13e6b94990abf5b140","from":"/appliance/1806299596727829081434298f15a991/subscribe","payloadVersion":1},"payload":{"online":{"status":2}}}
-        /app/64416/subscribe <-- {"header":{"messageId":"4bf5dfaaa0898243a846c1f2a93970fe","namespace":"Appliance.System.Online","timestamp":1539614201,"method":"PUSH","sign":"f979692120e7165b2116abdfd464ca83","from":"/appliance/1806299596727829081434298f15a991/subscribe","payloadVersion":1},"payload":{"online":{"status":1}}}
-        /app/64416/subscribe <-- {"header":{"messageId":"46182b62a9377a8cc0147f22262a23f3","namespace":"Appliance.System.Report","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539614201,"timestampMs":78,"sign":"048fad34ca4d00875a026e33b16caf1b"},"payload":{"report":[{"type":"1","value":"0","timestamp":1539614201}]}}
-        TIMEOUT
-        err: Error: Timeout, res: undefined
-        /app/64416/subscribe <-- {"header":{"messageId":"8dbe0240b2c03dcefda87a758a228d21","namespace":"Appliance.Control.ToggleX","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539614273,"timestampMs":27,"sign":"0f1ab22db05842eb94714b669b911aff"},"payload":{"togglex":{"channel":1,"onoff":1,"lmTime":1539614273}}}
-        /app/64416/subscribe <-- {"header":{"messageId":"6ecacf6453bb0a4256f8bf1f5dd1d835","namespace":"Appliance.Control.ToggleX","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539614276,"timestampMs":509,"sign":"b8281d71ef8ab5420a1382af5ff9fc34"},"payload":{"togglex":{"channel":1,"onoff":0,"lmTime":1539614276}}}
+      const loginResponse: LoginResponse = (await this.authenticatedPost(
+        LOGIN_URL,
+        data
+      )) as LoginResponse;
 
-        {"header":{"messageId":"98fee66789f75eb0e149f2a5116f919c","namespace":"Appliance.Control.ToggleX","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539633281,"timestampMs":609,"sign":"dd6bf3acee81a6c46f6fedd02515ddf3"},"payload":{"togglex":[{"channel":0,"onoff":0,"lmTime":1539633280},{"channel":1,"onoff":0,"lmTime":1539633280},{"channel":2,"onoff":0,"lmTime":1539633280},{"channel":3,"onoff":0,"lmTime":1539633280},{"channel":4,"onoff":0,"lmTime":1539633280}]}}
-        */
+      if (!loginResponse) {
+        throw new Error("No valid Login Response data received");
+      }
+
+      this.token = loginResponse.token;
+      this.key = loginResponse.key;
+      this.userId = loginResponse.userid.toString();
+      this.userEmail = loginResponse.email;
+      this.authenticated = true;
+
+      const deviceList: DeviceList = (await this.authenticatedPost(
+        DEV_LIST,
+        {}
+      )) as DeviceList;
+
+      let initCounter = 0;
+      let deviceListLength = 0;
+
+      if (deviceList && Array.isArray(deviceList)) {
+        deviceListLength = deviceList.length;
+
+        for (const dev of deviceList) {
+          if (dev.deviceType.startsWith("msh300")) {
+            this.options.logger &&
+              this.options.logger(`${dev.uuid} Detected Hub`);
+            const subDeviceList = await this.authenticatedPost(SUBDEV_LIST, {
+              uuid: dev.uuid,
+            });
+            this.connectDevice(
+              new MerossCloudHubDevice(this, dev, subDeviceList),
+              dev
+            );
+            initCounter++;
+          } else {
+            this.connectDevice(new MerossCloudDevice(this, dev), dev);
+            initCounter++;
+          }
+        }
+      }
+
+      if (initCounter !== deviceListLength) {
+        throw new Error("Initialization count mismatch");
+      }
+
+      return deviceListLength;
+    } catch (error) {
+      console.error(error);
+      return 0;
+    }
   }
 
-  logout(callback: any): void {
+  async logout(): Promise<void> {
     if (!this.authenticated || !this.token) {
-      return callback && callback(new Error("Not authenticated"), 0);
+      throw new Error("Not authenticated");
     }
-    this.authenticatedPost(LOGOUT_URL, {}, (err: any, logoutResponse: any) => {
-      //console.log(logoutResponse);
-      if (err) {
-        callback && callback(err, 0);
-        return;
-      }
+
+    try {
+      await this.authenticatedPost(LOGOUT_URL, {});
+
       this.token = null;
       this.key = null;
       this.userId = null;
       this.userEmail = null;
       this.authenticated = false;
-
-      callback && callback();
-    });
+    } catch (error) {
+      console.error(error);
+      throw error; // TODO: check if this needs to be handled
+    }
   }
 
   getDevice(uuid: string): MerossCloudDevice {
@@ -498,47 +471,44 @@ export class MerossCloud extends EventEmitter {
     return true;
   }
 
-  sendMessageHttp(
-    dev: DeviceDefinitionType,
-    ip: string,
-    payload: any,
-    callback: any
-  ) {
+  async sendMessageHttp(dev: DeviceDefinitionType, ip: string, payload: any) {
     const options = {
       url: `http://${ip}/config`,
       method: "POST",
       json: payload,
       timeout: this.timeout,
     };
+
     this.options.logger &&
       this.options.logger(
         `HTTP-Local-Call ${dev.uuid}: ${JSON.stringify(options)}`
       );
-    // Perform the request.
-    request(options, (error, response, body) => {
-      if (!error && response && response.statusCode === 200 && body) {
-        this.options.logger &&
-          this.options.logger(
-            `HTTP-Local-Response OK ${dev.uuid}: ${JSON.stringify(body)}`
-          );
-        if (body) {
-          setImmediate(() => {
-            this.devices[dev.uuid].handleMessage(body);
-          });
-          return callback && callback(null);
-        }
-        return (
-          callback && callback(new Error(`${body.apiStatus}: ${body.info}`))
-        );
-      }
+
+    const response = await requestAsync(options);
+
+    if (response && response.statusCode === 200 && response.body) {
       this.options.logger &&
         this.options.logger(
-          `HTTP-Local-Response Error ${dev.uuid}: ${error} / Status=${
-            response ? response.statusCode : "--"
-          }`
+          `HTTP-Local-Response OK ${dev.uuid}: ${JSON.stringify(response.body)}`
         );
-      return callback && callback(error);
-    });
+
+      if (response.body) {
+        setImmediate(() => {
+          this.devices[dev.uuid].handleMessage(response.body);
+        });
+      } else {
+        throw new Error(`${response.body.apiStatus}: ${response.body.info}`);
+      }
+    } else {
+      const errorMessage = response
+        ? `${response.statusCode} - ${response.statusMessage}`
+        : "No response received";
+      this.options.logger &&
+        this.options.logger(
+          `HTTP-Local-Response Error ${dev.uuid}: ${errorMessage}`
+        );
+      throw new Error(errorMessage);
+    }
   }
 
   encodeMessage(method: any, namespace: any, payload: any) {
@@ -567,21 +537,24 @@ export class MerossCloud extends EventEmitter {
     };
   }
 
-  sendMessage(dev: DeviceDefinitionType, ip: string, data: any, callback: any) {
+  async sendMessage(dev: DeviceDefinitionType, ip: string | null, data: any) {
     if (this.localHttpFirst && ip) {
-      this.sendMessageHttp(dev, ip, data, (err: any) => {
-        let res = !err;
+      try {
+        await this.sendMessageHttp(dev, ip, data);
+        return true;
+      } catch (err) {
         const isGetMessage =
           data && data.header && data.header.method === "GET";
-        let resendToCloud =
+        const resendToCloud =
           !isGetMessage || (isGetMessage && !this.onlyLocalForGet);
-        if (err && resendToCloud) {
-          res = this.sendMessageMqtt(dev, data);
+
+        if (resendToCloud) {
+          return this.sendMessageMqtt(dev, data);
         }
-        callback && callback(res);
-      });
+        return false;
+      }
     } else {
-      callback && callback(this.sendMessageMqtt(dev, data));
+      return this.sendMessageMqtt(dev, data);
     }
   }
 }

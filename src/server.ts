@@ -3,7 +3,7 @@
 import express, { Request, Response } from "express";
 import app from "./lib/app";
 import * as path from "path";
-import logger from "./middleware/logEvents";
+import logger, { log } from "./middleware/logEvents";
 import errorHandler from "./middleware/errorHandler";
 import credentials from "./middleware/credentials";
 import cors from "cors";
@@ -49,5 +49,5 @@ app.all("*", (req: Request, res: Response) => {
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
+  log(`Server listening on ${PORT}`);
 });

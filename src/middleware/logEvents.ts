@@ -23,6 +23,34 @@ export const logEvents = async (message: string, logName: string) => {
     console.error(error);
   }
 };
+
+export const log = async (
+  message: string,
+  topic?: string,
+  userId?: number,
+  logName: string = "logs.txt"
+) => {
+  const dateTime = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+  let logItem = `[${dateTime}]: `;
+  logItem += topic ? `${topic} ` : "";
+  logItem += userId ? `user (${userId}) ` : "";
+  logItem += `${message}\n`;
+  console.log(logItem);
+
+  try {
+    if (!fs.existsSync(path.join(__dirname, "..", "logs"))) {
+      await fsPromises.mkdir(path.join(__dirname, "..", "logs"));
+    }
+
+    await fsPromises.appendFile(
+      path.join(__dirname, "..", "logs", logName),
+      logItem
+    );
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 export const logger = (
   req: AuthenticatedRequest,
   res: Response,

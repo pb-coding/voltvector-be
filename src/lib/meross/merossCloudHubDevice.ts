@@ -11,55 +11,42 @@ export class MerossCloudHubDevice extends MerossCloudDevice {
     this.subDeviceList = subDeviceList;
   }
 
-  getHubBattery(callback: any) {
+  async getHubBattery() {
     const payload = { battery: [] };
-    return this.publishMessage(
-      "GET",
-      "Appliance.Hub.Battery",
-      payload,
-      callback
-    );
+    return await this.publishMessage("GET", "Appliance.Hub.Battery", payload);
   }
 
-  getMts100All(ids: any, callback: any) {
+  async getMts100All(ids: any) {
     const payload = { all: [] as any[] };
     ids.forEach((id: any) => payload.all.push({ id: id }));
-    return this.publishMessage(
+    return await this.publishMessage(
       "GET",
       "Appliance.Hub.Mts100.All",
-      payload,
-      callback
+      payload
     );
   }
 
-  controlHubToggleX(subId: any, onoff: any, callback: any) {
+  async controlHubToggleX(subId: any, onoff: any) {
     const payload = { togglex: [{ id: subId, onoff: onoff ? 1 : 0 }] };
-    return this.publishMessage(
-      "SET",
-      "Appliance.Hub.ToggleX",
-      payload,
-      callback
-    );
+    return await this.publishMessage("SET", "Appliance.Hub.ToggleX", payload);
   }
 
-  controlHubMts100Mode(subId: any, mode: any, callback: any) {
+  async controlHubMts100Mode(subId: any, mode: any) {
     const payload = { mode: [{ id: subId, state: mode }] };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.Hub.Mts100.Mode",
-      payload,
-      callback
+      payload
     );
   }
 
-  controlHubMts100Temperature(subId: any, temp: any, callback: any) {
+  async controlHubMts100Temperature(subId: any, temp: any) {
     temp.id = subId;
     const payload = { temperature: [temp] };
-    return this.publishMessage(
+    return await this.publishMessage(
       "SET",
       "Appliance.Hub.Mts100.Temperature",
-      payload,
-      callback
+      payload
     );
   }
 }
