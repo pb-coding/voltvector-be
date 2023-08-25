@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Role } from "@prisma/client";
 
-import merossController from "../meross/merossController";
+import merossController from "../smarthome/provider/meross/merossController";
 import authorize from "../middleware/authorize";
 
 const merossRouter = Router();

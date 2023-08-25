@@ -116,14 +116,14 @@ export class MerossCloud extends EventEmitter {
       timeout: this.timeout,
     };
 
-    this.options.logger &&
-      this.options.logger(`HTTP-Call: ${JSON.stringify(options)}`);
+    /*this.options.logger &&
+      this.options.logger("Meross", `HTTP-Call: ${JSON.stringify(options)}`);*/
 
     return new Promise((resolve, reject) => {
       request(options, (error, response, body) => {
         if (!error && response && response.statusCode === 200 && body) {
-          this.options.logger &&
-            this.options.logger(`HTTP-Response OK: ${body}`);
+          /*this.options.logger &&
+            this.options.logger("Meross", `HTTP-Response OK: ${body}`);*/
           try {
             body = JSON.parse(body);
           } catch (err) {
@@ -133,17 +133,17 @@ export class MerossCloud extends EventEmitter {
           if (body.apiStatus === 0) {
             resolve(body.data);
           } else {
-            reject(
-              new Error(
-                `${body.apiStatus} (${getErrorMessage(body.apiStatus)})${
-                  body.info ? ` - ${body.info}` : ""
-                }`
-              )
+            const error = new Error(
+              `${body.apiStatus} (${getErrorMessage(body.apiStatus)})${
+                body.info ? ` - ${body.info}` : ""
+              }`
             );
+            reject(error);
           }
         } else {
           this.options.logger &&
             this.options.logger(
+              "Meross Error",
               `HTTP-Response Error: ${error} / Status=${
                 response ? response.statusCode : "--"
               }`
@@ -236,7 +236,7 @@ export class MerossCloud extends EventEmitter {
         for (const dev of deviceList) {
           if (dev.deviceType.startsWith("msh300")) {
             this.options.logger &&
-              this.options.logger(`${dev.uuid} Detected Hub`);
+              this.options.logger("Meross", `${dev.uuid} Detected Hub`);
             const subDeviceList = await this.authenticatedPost(SUBDEV_LIST, {
               uuid: dev.uuid,
             });
@@ -454,10 +454,10 @@ export class MerossCloud extends EventEmitter {
       return false;
     }
 
-    this.options.logger &&
+    /*this.options.logger &&
       this.options.logger(
         `MQTT-Cloud-Call ${dev.uuid}: ${JSON.stringify(data)}`
-      );
+      );*/
     this.mqttConnections[dev.domain]?.client?.publish(
       `/appliance/${dev.uuid}/subscribe`,
       JSON.stringify(data),
@@ -479,18 +479,18 @@ export class MerossCloud extends EventEmitter {
       timeout: this.timeout,
     };
 
-    this.options.logger &&
+    /*this.options.logger &&
       this.options.logger(
         `HTTP-Local-Call ${dev.uuid}: ${JSON.stringify(options)}`
-      );
+      );*/
 
     const response = await requestAsync(options);
 
     if (response && response.statusCode === 200 && response.body) {
-      this.options.logger &&
+      /*this.options.logger &&
         this.options.logger(
           `HTTP-Local-Response OK ${dev.uuid}: ${JSON.stringify(response.body)}`
-        );
+        );*/
 
       if (response.body) {
         setImmediate(() => {
@@ -505,6 +505,7 @@ export class MerossCloud extends EventEmitter {
         : "No response received";
       this.options.logger &&
         this.options.logger(
+          "Meross Error",
           `HTTP-Local-Response Error ${dev.uuid}: ${errorMessage}`
         );
       throw new Error(errorMessage);

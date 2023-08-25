@@ -24,6 +24,7 @@ import {
   ProductionDataResponse,
   ProductionInterval,
 } from "./enphaseEnergyTypes";
+import { log } from "../../middleware/logEvents";
 
 const userIdsToUpdate = [Number(process.env.ADMIN_USER_ID) ?? 2]; // For now we fetch data only for the admin user TODO: fetch all users from db
 const solarSystemId = 3447361; // TODO: get solarSystemId from db
@@ -47,7 +48,8 @@ const updateEnergyDataJob = async (
     const activeEnphaseApp = await identifyEnphaseApp(userId);
 
     if (!activeEnphaseApp) {
-      console.log(
+      log(
+        "Job (update energy)",
         `No enphase app for user with id ${userId} found. Skipping user.`
       );
       return;
@@ -72,8 +74,9 @@ const updateEnergyDataJob = async (
       consumptionData.intervals
     );
 
-    console.log(
-      `Job (update): Fetched energy data for user ${userId} using ${activeEnphaseApp.app.name} (id: ${activeEnphaseApp.id}).`
+    log(
+      "Job (update energy)",
+      `Fetched energy data for user ${userId} using ${activeEnphaseApp.app.name} (id: ${activeEnphaseApp.id}).`
     );
 
     const updatedRows = await enphaseEnergyRepository.saveEnergyData(
@@ -103,16 +106,18 @@ const verifyEnergyDataConsistencyJob = async (
       if (!previousEndDate || !currentEndDate) return;
       const difference = differenceInMinutes(currentEndDate, previousEndDate);
       if (difference > 15) {
-        console.log(
-          `Job (verify): Found gap of ${difference} minutes between ${previousEndDate} and ${currentEndDate}`
+        log(
+          "Job (verify energy)",
+          `Found gap of ${difference} minutes between ${previousEndDate} and ${currentEndDate}`
         );
         const dayWithGaps = startOfDay(addMinutes(previousEndDate, 15));
         daysWithGaps.push(dayWithGaps);
 
         const differenceInDays = difference / 60 / 24;
         if (differenceInDays > 1) {
-          console.log(
-            "Job (verify): Gap is bigger than 1 day: " + differenceInDays
+          log(
+            "Job (verify energy)",
+            "Gap is bigger than 1 day: " + differenceInDays
           );
           const amountOfDaysMissing = Math.floor(differenceInDays) + 1;
           for (let i = 1; i < amountOfDaysMissing; i++) {
@@ -126,13 +131,14 @@ const verifyEnergyDataConsistencyJob = async (
       ...new Set(daysWithGaps.map((date) => date.getTime())),
     ].map((time) => new Date(time));
     if (uniqueDaysWithGaps.length === 0) {
-      console.log("Job (verify): No gaps found.");
+      log("Job (update energy)", "No gaps found.");
       return;
     }
+    log("Job (update energy)", "Found days with gaps:");
     console.log(uniqueDaysWithGaps);
 
     if (readOnly) {
-      console.log("Job (verify): Read only mode, not updating energy data.");
+      log("Job (update energy)", "Read only mode, not updating energy data.");
       return;
     }
 
@@ -167,8 +173,9 @@ const identifyEnphaseApp = async (userId: number) => {
   );
 
   if (activeUserApps.length === 0) {
-    console.log(
-      `Job (update): No authorized apps for user ${userId} found. Skipping user.`
+    log(
+      "Job (update energy)",
+      `No authorized apps for user ${userId} found. Skipping user.`
     );
     return;
   }

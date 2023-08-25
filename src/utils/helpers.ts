@@ -1,4 +1,10 @@
 import { Response } from "express";
+import {
+  randomBytes,
+  createCipheriv,
+  createDecipheriv,
+  scryptSync,
+} from "crypto";
 
 export const isNullOrBlank = (value: string | null | undefined) => {
   return !value || value.trim() === "";
@@ -74,4 +80,42 @@ export const isNotExpired = (date: Date, timeframeInMillis: number) => {
   }
 
   return false;
+};
+
+const algorithm = "aes-256-gcm";
+
+export const encrypt = async (text: string, secret: string) => {
+  const iv = randomBytes(16);
+  const salt = randomBytes(16);
+  const key = scryptSync(secret, salt, 32);
+
+  const cipher = createCipheriv(algorithm, key, iv);
+  const encryptedBuffer = Buffer.concat([
+    cipher.update(text, "utf8"),
+    cipher.final(),
+  ]);
+  const encrypted = encryptedBuffer.toString("hex");
+
+  const tag = cipher.getAuthTag();
+  return `${salt.toString("hex")}.${iv.toString(
+    "hex"
+  )}.${encrypted}.${tag.toString("hex")}`;
+};
+
+export const decrypt = async (encryptedText: string, secret: string) => {
+  const [salt, iv, encryptedHex, tag] = encryptedText
+    .split(".")
+    .map((part) => Buffer.from(part, "hex"));
+  const key = scryptSync(secret, salt, 32);
+
+  const decipher = createDecipheriv(algorithm, key, iv);
+  decipher.setAuthTag(tag);
+
+  const decryptedBuffer = Buffer.concat([
+    decipher.update(encryptedHex),
+    decipher.final(),
+  ]);
+  const decrypted = decryptedBuffer.toString("utf8");
+
+  return decrypted;
 };

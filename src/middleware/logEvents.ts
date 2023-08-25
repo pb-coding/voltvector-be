@@ -25,17 +25,17 @@ export const logEvents = async (message: string, logName: string) => {
 };
 
 export const log = async (
+  topic: string,
   message: string,
-  topic?: string,
   userId?: number,
   logName: string = "logs.txt"
 ) => {
   const dateTime = format(new Date(), "yyyy-MM-dd HH:mm:ss");
   let logItem = `[${dateTime}]: `;
-  logItem += topic ? `${topic} ` : "";
-  logItem += userId ? `user (${userId}) ` : "";
-  logItem += `${message}\n`;
+  logItem += `${topic}: ${message} `;
+  logItem += userId ? `[User: ${userId}] ` : "";
   console.log(logItem);
+  logItem += "\n";
 
   try {
     if (!fs.existsSync(path.join(__dirname, "..", "logs"))) {

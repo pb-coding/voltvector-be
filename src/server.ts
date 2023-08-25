@@ -14,6 +14,7 @@ import authRouter from "./routes/auth";
 import enphaseRouter from "./routes/enphase";
 import energyRouter from "./routes/energy";
 import merossRouter from "./routes/meross";
+import smartHomeRouter from "./routes/smarthome";
 import userRouter from "./routes/user";
 
 // Initialize cron jobs
@@ -40,6 +41,7 @@ app.use("/auth", authRouter);
 app.use("/enphase", enphaseRouter);
 app.use("/energy", energyRouter);
 app.use("/meross", merossRouter);
+app.use("/smarthome", smartHomeRouter);
 app.use("/user", userRouter);
 
 app.all("*", (req: Request, res: Response) => {
@@ -49,5 +51,5 @@ app.all("*", (req: Request, res: Response) => {
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  log(`Server listening on ${PORT}`);
+  log("ExpressJS", `Server listening on ${PORT}`);
 });

@@ -189,6 +189,8 @@ export type LoginParameters = {
   };
 };
 
+export type LoginParametersEncoded = string;
+
 export type UuidParameters = {
   uuid: string;
 };

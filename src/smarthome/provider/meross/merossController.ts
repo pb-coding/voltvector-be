@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 
-import { validateRequestParams } from "../utils/helpers";
+import { validateRequestParams } from "../../../utils/helpers";
 import merossService from "./merossService";
-import { asyncHandler } from "../middleware/errorHandler";
-import { AuthenticatedRequest } from "../auth/authTypes";
+import { asyncHandler } from "../../../middleware/errorHandler";
+import { AuthenticatedRequest } from "../../../auth/authTypes";
 
 const handleGetDevicesRequest = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -105,7 +105,7 @@ const handlePutDeviceRequest = asyncHandler(
       desiredDeviceState
     );
     if (!success) res.status(500).json("Toggling device failed");
-    else res.json(`Setting device ${deviceId} to ${setValue} was successful`);
+    else res.send(`Setting device ${deviceId} to ${setValue} was successful`);
   }
 );
 

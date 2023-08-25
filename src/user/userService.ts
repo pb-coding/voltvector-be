@@ -2,6 +2,7 @@ import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
 import { CreateUserRequest, UpdateUserRequest } from "./userTypes";
 import { Role } from "@prisma/client";
+import { log } from "../middleware/logEvents";
 
 const queryAllUsers = async () => {
   const users = await prisma.user.findMany({
@@ -67,7 +68,7 @@ const createUser = async (user: CreateUserRequest) => {
       roles: true,
     },
   });
-  console.log(`Created User in Database wit id: ${newUser.id}`);
+  log("DB", `Created User in Database wit id: ${newUser.id}`);
   return newUser;
 };
 
@@ -96,7 +97,7 @@ const updateUser = async (id: number, user: UpdateUserRequest) => {
       password: false,
     },
   });
-  console.log(`Updated User in Database with id: ${updatedUser.id}`);
+  log("DB", `Updated User in Database with id: ${updatedUser.id}`);
   return updatedUser;
 };
 
@@ -108,7 +109,7 @@ const deleteUsers = async (ids: number[]) => {
       },
     },
   });
-  console.log(`Deleted User(s) in Database: ${deletedUser}`);
+  log("DB", `Deleted User(s) in Database: ${deletedUser}`);
   return deletedUser;
 };
 

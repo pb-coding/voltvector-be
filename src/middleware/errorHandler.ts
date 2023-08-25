@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { logEvents } from "./logEvents";
 import { Prisma } from "@prisma/client";
 
+import { log } from "./logEvents";
+
 const errorHandler = (
   error: unknown,
   req: Request,
@@ -27,7 +29,7 @@ const errorHandler = (
     }
   }
 
-  console.log(errorMessage);
+  log("Error Handler", errorMessage);
 
   res.status(statusCode).json({
     error: errorMessage,

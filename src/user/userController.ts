@@ -6,6 +6,7 @@ import { asyncHandler } from "../middleware/errorHandler";
 import { validateRequestParams } from "../utils/helpers";
 import { AuthenticatedRequest } from "../auth/authTypes";
 import { isAdmin } from "../middleware/authorize";
+import { log } from "../middleware/logEvents";
 
 export const handleAllUsersRequest = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -78,7 +79,7 @@ export const handleCreateUserRequest = asyncHandler(
     };
     const newUser = await userService.createUser(user);
     const message = `Successfully created user ${newUser.name} with id: ${newUser.id}`;
-    console.log(message);
+    log("DB", message);
     res.json({ message });
   }
 );
@@ -125,7 +126,7 @@ export const handleUpdateUserRequest = asyncHandler(
     };
     const updatedUser = await userService.updateUser(Number(providedId), user);
     const message = `Successfully updated user ${updatedUser.name} with id: ${updatedUser.id}`;
-    console.log(message);
+    log("DB", message);
     res.json({ message });
   }
 );
