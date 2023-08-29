@@ -16,9 +16,7 @@ services:
       - ./dump:/docker-entrypoint-initdb.d
 
   voltvector-be:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: voltvector-be:latest
     ports:
       - "3001:3001"
     depends_on:
