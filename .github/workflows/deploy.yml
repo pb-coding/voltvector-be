@@ -40,6 +40,7 @@ jobs:
         run: |
           echo "$DEPLOY_KEY" > deploy_key.pem
           chmod 600 deploy_key.pem
+          scp -i deploy_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:/home/pb1497/deployments/voltvector-be/
           scp -i deploy_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null .github/scripts/deploy.sh $DEPLOY_USER@$DEPLOY_HOST:/tmp/
           ssh -i deploy_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPLOY_USER@$DEPLOY_HOST "GITHUB_TOKEN=$GITHUB_TOKEN bash -s" < /tmp/deploy.sh
           rm -f deploy_key.pem
