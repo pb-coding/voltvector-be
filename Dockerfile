@@ -17,4 +17,4 @@ RUN npm run build
 
 EXPOSE 3001
 
-CMD ["npm", "start"]
+CMD sh -c "npx prisma migrate dev && npx prisma db seed && npm start"
