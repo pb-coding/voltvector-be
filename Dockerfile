@@ -11,7 +11,7 @@ COPY tsconfig.json ./
 
 COPY . .
 
-RUN npm install
+RUN npm install --ignore-scripts
 
 RUN npm run prisma:generate
 
