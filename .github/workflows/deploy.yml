@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build_and_push_docker_image:
+  build_and_push:
     runs-on: self-hosted
     steps:
       - name: Checkout repository
@@ -27,7 +27,7 @@ jobs:
           tags: ghcr.io/${{ github.actor }}/voltvector-be:latest
 
   deploy:
-    needs: build_and_push_docker_image
+    needs: build_and_push
     if: ${{ success() }}
     runs-on: self-hosted
     steps:

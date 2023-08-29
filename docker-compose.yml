@@ -1,9 +1,25 @@
 version: "3.1"
 
 services:
+  voltvector-be:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    networks:
+      - default
+      - swag_net
+    env_file:
+      - .env
+
   postgres:
     image: postgres:12.4
     restart: on-failure
+    networks:
+      - default
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
@@ -12,3 +28,9 @@ services:
       - 5432:5432
     volumes:
       - ./dump:/docker-entrypoint-initdb.d
+
+networks:
+  default:
+  swag_net:
+    external:
+      name: swag_net
