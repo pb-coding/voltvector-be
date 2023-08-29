@@ -57,6 +57,7 @@ const handleGetDeviceRequest = asyncHandler(
     // TODO: consider devices with multiple toggle states
     const deviceInfoOverview = {
       id: deviceInfo.all.system.hardware.uuid,
+      name: device.dev.devName,
       onlineStatus: deviceInfo.all.system.online.status,
       deviceType: deviceInfo.all.system.hardware.type,
       toggleStatus: deviceInfo.all.digest.togglex[0].onoff,
@@ -104,8 +105,14 @@ const handlePutDeviceRequest = asyncHandler(
       device,
       desiredDeviceState
     );
+
+    const setDeviceResponse = {
+      uuid: device.dev.uuid,
+      state: setValue,
+    };
+
     if (!success) res.status(500).json("Toggling device failed");
-    else res.send(`Setting device ${deviceId} to ${setValue} was successful`);
+    else res.json(setDeviceResponse);
   }
 );
 

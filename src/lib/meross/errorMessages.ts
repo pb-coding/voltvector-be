@@ -1,3 +1,5 @@
+// thanks to https://github.com/Apollon77/meross-cloud for the meross cloud implementation
+
 const errorMessages: Record<number, string> = {
   500: "The selected timezone is not supported",
   1001: "Wrong or missing password",

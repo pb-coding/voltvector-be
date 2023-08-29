@@ -265,7 +265,7 @@ export class MerossCloud extends EventEmitter {
 
   async logout(): Promise<void> {
     if (!this.authenticated || !this.token) {
-      throw new Error("Not authenticated");
+      console.log("Meross: Already logged out");
     }
 
     try {

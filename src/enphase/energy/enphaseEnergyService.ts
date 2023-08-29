@@ -28,6 +28,7 @@ import { log } from "../../middleware/logEvents";
 
 const userIdsToUpdate = [Number(process.env.ADMIN_USER_ID) ?? 2]; // For now we fetch data only for the admin user TODO: fetch all users from db
 const solarSystemId = 3447361; // TODO: get solarSystemId from db
+const MAX_RETRIES = 3;
 
 /**
  * identify users for which energy data fetching is available (currently Admin user only)
@@ -45,46 +46,53 @@ const updateEnergyDataJob = async (
   const userIds = !selectedUserIds ? userIdsToUpdate : selectedUserIds;
 
   for (const userId of userIds) {
-    const activeEnphaseApp = await identifyEnphaseApp(userId);
+    try {
+      const activeEnphaseApp = await identifyEnphaseApp(userId);
 
-    if (!activeEnphaseApp) {
+      if (!activeEnphaseApp) {
+        log(
+          "Job (update energy)",
+          `No enphase app for user with id ${userId} found. Skipping user.`
+        );
+        continue;
+      }
+
+      const productionData = await getEnphaseData<ProductionDataResponse>(
+        enphaseEnergyClient.requestProductionData,
+        activeEnphaseApp,
+        solarSystemId,
+        dayToFetchDate
+      );
+
+      const consumptionData = await getEnphaseData<ConsumptionDataResponse>(
+        enphaseEnergyClient.requestConsumptionData,
+        activeEnphaseApp,
+        solarSystemId,
+        dayToFetchDate
+      );
+
+      const energyData = mergeProductionAndConsumptionData(
+        productionData.intervals,
+        consumptionData.intervals
+      );
+
       log(
         "Job (update energy)",
-        `No enphase app for user with id ${userId} found. Skipping user.`
+        `Fetched energy data for user ${userId} using ${activeEnphaseApp.app.name} (id: ${activeEnphaseApp.id}).`
       );
-      return;
+
+      const updatedRows = await enphaseEnergyRepository.saveEnergyData(
+        userId,
+        activeEnphaseApp.id,
+        solarSystemId,
+        energyData
+      );
+    } catch (error) {
+      log(
+        "Job (update energy)",
+        `Error processing data for user with id ${userId}. Error: ${error}`
+      );
     }
-
-    const productionData = await getEnphaseData<ProductionDataResponse>(
-      enphaseEnergyClient.requestProductionData,
-      activeEnphaseApp,
-      solarSystemId,
-      dayToFetchDate
-    );
-
-    const consumptionData = await getEnphaseData<ConsumptionDataResponse>(
-      enphaseEnergyClient.requestConsumptionData,
-      activeEnphaseApp,
-      solarSystemId,
-      dayToFetchDate
-    );
-
-    const energyData = mergeProductionAndConsumptionData(
-      productionData.intervals,
-      consumptionData.intervals
-    );
-
-    log(
-      "Job (update energy)",
-      `Fetched energy data for user ${userId} using ${activeEnphaseApp.app.name} (id: ${activeEnphaseApp.id}).`
-    );
-
-    const updatedRows = await enphaseEnergyRepository.saveEnergyData(
-      userId,
-      activeEnphaseApp.id,
-      solarSystemId,
-      energyData
-    );
   }
 };
 
@@ -272,32 +280,46 @@ const getEnphaseData = async <EnphaseDataType>(
   solarSystemId: number,
   dayToFetchDate?: Date
 ): Promise<EnphaseDataType> => {
-  await verifyAuthTokensAndRefreshIfNeeded(enphaseApp);
-  const freshEnphaseApp = await enphaseAuthRepository.queryEnphaseAppById(
-    enphaseApp.id
-  );
+  let retries = 0;
+  while (retries < MAX_RETRIES) {
+    try {
+      await verifyAuthTokensAndRefreshIfNeeded(enphaseApp);
+      const freshEnphaseApp = await enphaseAuthRepository.queryEnphaseAppById(
+        enphaseApp.id
+      );
 
-  let data;
-  const accessToken = freshEnphaseApp?.accessToken;
-  const apiKey = enphaseApps.find(
-    (app) => app.name === freshEnphaseApp?.app.name
-  )?.apiKey;
+      let data;
+      const accessToken = freshEnphaseApp?.accessToken;
+      const apiKey = enphaseApps.find(
+        (app) => app.name === freshEnphaseApp?.app.name
+      )?.apiKey;
 
-  if (!accessToken || !solarSystemId || !apiKey)
-    throw "Essential data of enphase app missing..";
+      if (!accessToken || !solarSystemId || !apiKey)
+        throw Error("Essential data of enphase app missing..");
 
-  data = await getEnphaseDataFunction(
-    accessToken,
-    solarSystemId,
-    apiKey,
-    dayToFetchDate
-  );
+      data = await getEnphaseDataFunction(
+        accessToken,
+        solarSystemId,
+        apiKey,
+        dayToFetchDate
+      );
 
-  await enphaseService.logEnphaseApiRequest(
-    freshEnphaseApp,
-    getEnphaseDataFunction.name
-  );
-  return data as EnphaseDataType;
+      await enphaseService.logEnphaseApiRequest(
+        freshEnphaseApp,
+        getEnphaseDataFunction.name
+      );
+      return data as EnphaseDataType;
+    } catch (error) {
+      retries++;
+      log(
+        "Job (getEnphaseData)",
+        `Error while fetching data. Attempt: ${retries}. Error: ${error}`
+      );
+      if (retries === MAX_RETRIES)
+        throw new Error(`Failed to fetch data after ${MAX_RETRIES} attempts.`);
+    }
+  }
+  throw new Error("Failed to retrieve data.");
 };
 
 /**

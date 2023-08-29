@@ -3,11 +3,11 @@ import { Response } from "express";
 import smartHomeService from "./smartHomeService";
 import { AuthenticatedRequest } from "../auth/authTypes";
 import { asyncHandler } from "../middleware/errorHandler";
-import { encrypt, decrypt, validateRequestParams } from "../utils/helpers";
+import { encrypt, validateRequestParams } from "../utils/helpers";
 import { ENCRYPTION_SECRET } from "../utils/envs";
 import { SmartHomeProviderEnum, SmartHomeProviderType } from "./smartHomeTypes";
 
-const handleGetAuthorizedSmartHomeProviderRequest = asyncHandler(
+const handleGetAuthorizedProvidersRequest = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const decodedId = req.id;
 
@@ -24,7 +24,7 @@ const handleGetAuthorizedSmartHomeProviderRequest = asyncHandler(
   }
 );
 
-const handleAddSmartHomeAuthRequest = asyncHandler(
+const handleAddProviderAuthRequest = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const decodedId = req.id;
     const { email, password, provider } = req.body;
@@ -90,7 +90,7 @@ const handleAddSmartHomeAuthRequest = asyncHandler(
   }
 );
 
-const handleDeleteSmartHomeAuthRequest = asyncHandler(
+const handleDeleteProviderAuthRequest = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const decodedId = req.id;
     const { provider } = req.body;
@@ -121,10 +121,84 @@ const handleDeleteSmartHomeAuthRequest = asyncHandler(
   }
 );
 
+const handleGetDevicelistRequest = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const decodedId = req.id;
+
+    validateRequestParams(
+      [{ name: "decoded user id", param: decodedId, expectedType: "numeric" }],
+      res
+    );
+
+    const devicelist = await smartHomeService.getSmartHomeDevicelistForUser(
+      decodedId as number
+    );
+
+    res.json(devicelist);
+  }
+);
+
+const handleAddDeviceToListRequest = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const decodedId = req.id;
+    const { provider, deviceId } = req.body;
+
+    validateRequestParams(
+      [
+        { name: "decoded user id", param: decodedId, expectedType: "numeric" },
+        { name: "provider", param: provider, expectedType: "string" },
+        { name: "deviceId", param: deviceId, expectedType: "string" },
+      ],
+      res
+    );
+
+    const selectedProvider =
+      SmartHomeProviderEnum[provider as SmartHomeProviderType];
+
+    if (!selectedProvider) {
+      res.status(400).json({ error: "Invalid provider" });
+      return;
+    }
+
+    const createdDevice = await smartHomeService.saveInSmartHomeDevicelist(
+      decodedId as number,
+      selectedProvider,
+      deviceId as string
+    );
+
+    res.json(createdDevice);
+  }
+);
+
+const handleDeleteDeviceFromListRequest = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const decodedId = req.id;
+    const { deviceId } = req.body;
+
+    validateRequestParams(
+      [
+        { name: "decoded user id", param: decodedId, expectedType: "numeric" },
+        { name: "deviceId", param: deviceId, expectedType: "string" },
+      ],
+      res
+    );
+
+    const deletedDevice = await smartHomeService.deleteDeviceFromList(
+      decodedId as number,
+      deviceId as string
+    );
+
+    res.json(deletedDevice);
+  }
+);
+
 const smartHomeController = {
-  handleAddSmartHomeAuthRequest,
-  handleGetAuthorizedSmartHomeProviderRequest,
-  handleDeleteSmartHomeAuthRequest,
+  handleAddProviderAuthRequest,
+  handleGetAuthorizedProvidersRequest,
+  handleDeleteProviderAuthRequest,
+  handleGetDevicelistRequest,
+  handleAddDeviceToListRequest,
+  handleDeleteDeviceFromListRequest,
 };
 
 export default smartHomeController;

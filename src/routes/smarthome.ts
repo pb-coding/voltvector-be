@@ -9,19 +9,37 @@ const smartHomeRouter = Router();
 smartHomeRouter.get(
   "/providers",
   authorize([Role.USER]),
-  smartHomeController.handleGetAuthorizedSmartHomeProviderRequest
+  smartHomeController.handleGetAuthorizedProvidersRequest
 );
 
 smartHomeRouter.post(
   "/providers",
   authorize([Role.USER]),
-  smartHomeController.handleAddSmartHomeAuthRequest
+  smartHomeController.handleAddProviderAuthRequest
 );
 
 smartHomeRouter.delete(
   "/providers",
   authorize([Role.USER]),
-  smartHomeController.handleDeleteSmartHomeAuthRequest
+  smartHomeController.handleDeleteProviderAuthRequest
+);
+
+smartHomeRouter.get(
+  "/devicelist",
+  authorize([Role.USER]),
+  smartHomeController.handleGetDevicelistRequest
+);
+
+smartHomeRouter.post(
+  "/devicelist",
+  authorize([Role.USER]),
+  smartHomeController.handleAddDeviceToListRequest
+);
+
+smartHomeRouter.delete(
+  "/devicelist",
+  authorize([Role.USER]),
+  smartHomeController.handleDeleteDeviceFromListRequest
 );
 
 export default smartHomeRouter;

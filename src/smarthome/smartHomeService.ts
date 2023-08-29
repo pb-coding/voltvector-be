@@ -7,6 +7,7 @@ import {
 } from "./smartHomeTypes";
 import { log } from "../middleware/logEvents";
 import { clearCacheForUser } from "./provider/meross/merossEventHandlers";
+import { de } from "date-fns/locale";
 
 const getSmartHomeProviderOverviewForUser = async (
   userId: number
@@ -122,6 +123,80 @@ const deleteSmartHomeProviderAuthForUser = async (
   }
 };
 
+const getSmartHomeDevicelistForUser = async (userId: number) => {
+  const smartHomeDeviceList =
+    await smartHomeRepository.querySmartHomeDevicelistByUserId(userId);
+  return smartHomeDeviceList;
+};
+
+const getSmartHomeDevicelistByDeviceId = async (
+  userId: number,
+  deviceId: string
+) => {
+  const smartHomeDevice =
+    await smartHomeRepository.querySmartHomeDevicelistByDeviceId(
+      userId,
+      deviceId
+    );
+  return smartHomeDevice;
+};
+
+const getPairedSmartHomeDevicesByProvider = async (
+  userId: number,
+  provider: SmartHomeProviderType
+) => {
+  if (provider === SmartHomeProviderEnum.MEROSS) {
+    const devices = await merossService.getDevicesByUserId(userId);
+    return devices;
+  }
+  throw new Error(`Invalid provider: ${provider}`);
+};
+
+const saveInSmartHomeDevicelist = async (
+  userId: number,
+  provider: SmartHomeProviderType,
+  deviceId: string
+) => {
+  const pairedDevices = await getPairedSmartHomeDevicesByProvider(
+    userId,
+    provider
+  );
+
+  const deviceIsOnline = pairedDevices.find(
+    (device) => device.uuid === deviceId
+  );
+
+  if (!deviceIsOnline) {
+    throw new Error(
+      `Can not save an unpaired device (${deviceId}) for user ${userId}.`
+    );
+  }
+
+  const deviceAlreadySaved = await getSmartHomeDevicelistByDeviceId(
+    userId,
+    deviceId
+  );
+
+  if (deviceAlreadySaved) {
+    throw new Error(`Device ${deviceId} already saved for user ${userId}.`);
+  }
+
+  const createdDevice = await smartHomeRepository.saveSmartHomeDevice(
+    userId,
+    provider,
+    deviceId
+  );
+  return createdDevice;
+};
+
+const deleteDeviceFromList = async (userId: number, deviceId: string) => {
+  const deletedDevice = await smartHomeRepository.deleteDeviceFromDevicelist(
+    userId,
+    deviceId
+  );
+  return deletedDevice;
+};
+
 const smartHomeService = {
   verifyCurrentSmartHomeProviderConnection,
   getSmartHomeProviderOverviewForUser,
@@ -129,6 +204,11 @@ const smartHomeService = {
   verifySmartHomeAuthCredentials,
   addSmartHomeAuth,
   deleteSmartHomeProviderAuthForUser,
+  getSmartHomeDevicelistForUser,
+  getSmartHomeDevicelistByDeviceId,
+  getPairedSmartHomeDevicesByProvider,
+  saveInSmartHomeDevicelist,
+  deleteDeviceFromList,
 };
 
 export default smartHomeService;
