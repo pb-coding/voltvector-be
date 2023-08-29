@@ -1,5 +1,9 @@
 node_modules
-# Keep environment variables out of version control
+# Ignore environment variables
 .env
 
+# Ignore built files
+dist
+
+# Keep logs out of version control
 src/logs/
