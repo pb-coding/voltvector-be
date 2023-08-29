@@ -1,5 +1,4 @@
-FROM node:latest
-LABEL org.opencontainers.image.source https://github.com/pb-coding/voltvector-be
+FROM node:alpine
 
 WORKDIR /usr/src/app
 
