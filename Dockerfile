@@ -5,13 +5,15 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install -g prisma @prisma/client
+COPY prisma ./prisma/
 
-RUN npm install
+COPY tsconfig.json ./
 
 COPY . .
 
-RUN npm run prisma:generate
+RUN npm install
+
+RUN npx prisma generate
 
 RUN npm run build
 
