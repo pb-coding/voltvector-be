@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:latest
 LABEL org.opencontainers.image.source https://github.com/pb-coding/voltvector-be
 
 WORKDIR /usr/src/app
