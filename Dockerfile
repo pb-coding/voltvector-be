@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install -g @prisma/client @prisma/cli
+RUN npm install -g @prisma/client
 
 RUN npm install
 
