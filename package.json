@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.ts",
+    "prisma:generate": "prisma generate",
     "build": "tsc",
     "start": "prisma generate && node dist/server.js"
   },
