@@ -16,7 +16,7 @@ services:
       - ./dump:/docker-entrypoint-initdb.d
 
   voltvector-be:
-    image: voltvector-be:latest
+    image: ghcr.io/pb-coding/voltvector-be
     ports:
       - "3001:3001"
     depends_on:
