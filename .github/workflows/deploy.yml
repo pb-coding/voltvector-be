@@ -30,7 +30,7 @@ jobs:
   deploy:
     needs: build_and_push
     if: ${{ success() }}
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
