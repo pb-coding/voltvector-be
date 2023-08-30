@@ -43,7 +43,9 @@ const handleEnphaseEnergyGetRequest = asyncHandler(
 
 const triggerUpdateEnergyDataJob = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    res.status(202).json({ message: "Job trigger accepted" });
+    res
+      .status(202)
+      .json({ message: "Job trigger accepted: update energy data job" });
     enphaseEnergyService.updateEnergyDataJob();
   }
 );
@@ -58,7 +60,9 @@ const triggerDataVerificationJob = asyncHandler(
       readOnly = true;
     }
 
-    res.status(202).json({ message: "Job trigger accepted" });
+    res
+      .status(202)
+      .json({ message: "Job trigger accepted: verify energy data job" });
     enphaseEnergyService.verifyEnergyDataConsistencyJob(null, readOnly);
   }
 );
