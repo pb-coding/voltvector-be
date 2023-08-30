@@ -20,6 +20,8 @@ import userRouter from "./routes/user";
 // Initialize cron jobs
 import "./enphase/energy/enphaseEnergyJobs";
 
+// helps to debug reading envs
+const environment = process.env.ENVIRONMENT ?? "can not read envs";
 const PORT = process.env.PORT || 3001;
 
 app.use(logger);
@@ -51,5 +53,5 @@ app.all("*", (req: Request, res: Response) => {
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  log("ExpressJS", `Server listening on ${PORT}`);
+  log("ExpressJS", `Server listening on ${PORT} - Environment: ${environment}`);
 });
