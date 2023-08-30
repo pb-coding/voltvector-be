@@ -13,6 +13,7 @@ services:
     ports:
       - 5432:5432
     volumes:
+      - pgdata:/var/lib/postgresql/data
       - ./dump:/docker-entrypoint-initdb.d
 
   voltvector-be:
@@ -26,6 +27,9 @@ services:
       - swag_net
     env_file:
       - .env
+
+volumes:
+  pgdata:
 
 networks:
   default:
