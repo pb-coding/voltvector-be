@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from "../../auth/authTypes";
 import { asyncHandler } from "../../middleware/errorHandler";
 import { validateRequestParams } from "../../utils/helpers";
 import enphaseEnergyService from "./enphaseEnergyService";
+import { isAdmin } from "../../middleware/authorize";
 
 const handleEnphaseEnergyGetRequest = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -43,6 +44,36 @@ const handleEnphaseEnergyGetRequest = asyncHandler(
 
 const triggerUpdateEnergyDataJob = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userId = req.id;
+    const providedUserId = req.query.userId;
+    const dayToFetch = req.query.dayToFetch;
+    const roles = req.roles;
+
+    if (!providedUserId || !dayToFetch) {
+      enphaseEnergyService.updateEnergyDataJob();
+      res
+        .status(202)
+        .json({ message: "Job trigger accepted: update energy data" });
+      return;
+    }
+
+    if (!isAdmin(roles) && providedUserId !== userId?.toString()) {
+      res.status(403).json({
+        error: "You are not authorized to trigger this job for other users",
+      });
+      return;
+    }
+
+    // TODO: validate userId
+    // TODO: validate date format
+
+    const dayToFetchDate = new Date(dayToFetch as string);
+
+    enphaseEnergyService.updateEnergyDataJob(
+      [Number(providedUserId)],
+      dayToFetchDate
+    );
+
     res
       .status(202)
       .json({ message: "Job trigger accepted: update energy data" });
