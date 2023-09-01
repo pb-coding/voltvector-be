@@ -36,7 +36,8 @@ const requestEnphaseTokensByAuthCode = async (
   code: string
 ): Promise<EnphaseAuthTokens> => {
   const grantType = "authorization_code";
-  const redirectUri = `http://localhost:3001/enphase/oauth?userid=${userId}&appname=${applicationName}`;
+  const frontendUrl = process.env.FRONTEND_URL || "";
+  const redirectUri = `${frontendUrl}/api/enphase/oauth?userid=${userId}&appname=${applicationName}`;
   const app = enphaseAppsClient.findEnphaseApp(applicationName);
   const authorization = createAuthorizationHeader(
     app.clientId,
