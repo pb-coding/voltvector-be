@@ -30,9 +30,11 @@ const handleEnphaseOauthRequest = asyncHandler(
       authCode
     );
 
+    const frontendUrl = process.env.FRONTEND_URL || "";
+
     if (!success)
       return res.status(400).json({ error: "Invalid oauth code provided." });
-    res.redirect("http://localhost:3000/settings/enphase");
+    res.redirect(`${frontendUrl}/settings/enphase`);
   }
 );
 
