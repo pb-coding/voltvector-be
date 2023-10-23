@@ -42,6 +42,7 @@ jobs:
         port: 22
         script: |
           curl -O https://raw.githubusercontent.com/pb-coding/voltvector-be/main/.github/scripts/deploy.sh
+          curl -O https://raw.githubusercontent.com/pb-coding/voltvector-be/main/docker-compose.yml
           chmod +x deploy.sh
           ./deploy.sh ${{ secrets.DOCKER_REGISTRY_TOKEN }}
           rm deploy.sh
