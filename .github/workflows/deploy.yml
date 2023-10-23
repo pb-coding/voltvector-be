@@ -30,21 +30,18 @@ jobs:
   deploy:
     needs: build_and_push
     if: ${{ success() }}
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Deploy to target server
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "$DEPLOY_KEY" > deploy_key.pem
-          chmod 600 deploy_key.pem
-          scp -i deploy_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml $DEPLOY_USER@$DEPLOY_HOST:/home/pb1497/deployments/voltvector-be/
-          scp -i deploy_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null .github/scripts/deploy.sh $DEPLOY_USER@$DEPLOY_HOST:/tmp/
-          ssh -i deploy_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPLOY_USER@$DEPLOY_HOST "GITHUB_TOKEN=$GITHUB_TOKEN bash -s" < /tmp/deploy.sh
-          rm -f deploy_key.pem
+    - uses: actions/checkout@v3
+    - uses: appleboy/ssh-action@v1.0.0
+      name: Fetch and run deploy script on remote
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        port: 22
+        script: |
+          curl -O https://raw.githubusercontent.com/pb-coding/voltvector-be/main/.github/scripts/deploy.sh
+          chmod +x deploy.sh
+          ./deploy.sh ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+          rm deploy.sh
